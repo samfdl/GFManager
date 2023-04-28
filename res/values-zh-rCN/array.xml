@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2013-2016, Shenzhen Huiding Technology Co., Ltd.
+  All Rights Reserved.
+-->
+
+<resources>
+
+    <string-array name="security_level_array">
+        <item>低</item>
+        <item>中</item>
+        <item>高</item>
+    </string-array>
+    <string-array name="security_level_values_array">
+        <item>2</item>
+        <item>1</item>
+        <item>0</item>
+    </string-array>
+    <string-array name="progress_style_array">
+        <item>百分比</item>
+        <item>分数</item>
+    </string-array>
+    <string-array name="progress_style_values_array">
+        <item>STYLE_PERCENT</item>
+        <item>STYLE_FRACTION</item>
+    </string-array>
+    <string-array name="progress_sample_data_type_array">
+        <item>原始数据</item>
+        <item>图像数据</item>
+    </string-array>
+    <string-array name="progress_sample_data_type_values_array">
+        <item>TYPE_RAW_DATA</item>
+        <item>TYPE_BMP_DATA</item>
+    </string-array>
+    <string-array name="dump_path_array">
+        <item>/sdcard/gf_data</item>
+        <item>/data/gf_data</item>
+    </string-array>
+    <string-array name="dump_op_array">
+        <item>DUMP_OP_ENROLL</item>
+        <item>DUMP_OP_AUTHENTICATE</item>
+        <item>DUMP_OP_FINGER_BASE</item>
+        <item>DUMP_OP_NAV</item>
+        <item>DUMP_OP_NAV_BASE</item>
+        <item>DUMP_OP_TEST_PERFORMANCE</item>
+        <item>DUMP_OP_TEST_SENSOR_FINE</item>
+        <item>DUMP_OP_TEST_PIXEL</item>
+        <item>DUMP_OP_TEST_BAD_POINT</item>
+        <item>DUMP_OP_DEVICE_INFO</item>
+        <item>DUMP_OP_TEMPLATE</item>
+        <item>DUMP_OP_NAV_ENHANCE_DATA</item>
+        <item>DUMP_OP_CALIBRATION_PARAM_RETEST</item>
+        <item>DUMP_OP_TEST_DATA_NOISE</item>
+    </string-array>
+    <string-array name="dump_op_result_array">
+        <item>All</item>
+        <item>Success only</item>
+        <item>Fail only</item>
+    </string-array>
+    <string-array name="dump_data_type_array">
+        <item>NONE</item>
+        <item>RAW_DATA</item>
+        <item>BROKEN_CHECK_RAW_DATA</item>
+        <item>CALIBRATION_PARAMS</item>
+        <item>CALIBRATION_RES</item>
+        <item>DATA_BMP</item>
+        <item>SITO_BMP</item>
+        <item>NAV_ENHANCE</item>
+        <item>TEMPLATE_DATA</item>
+        <item>DEVICE_INFO</item>
+        <item>ALL</item>
+    </string-array>
+
+</resources>

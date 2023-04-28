@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2013-2016, Shenzhen Huiding Technology Co., Ltd.
+  All Rights Reserved.
+-->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+    <Switch
+        android:id="@+id/dump_switch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dump_items_press_selector"
+        android:gravity="center_vertical"
+        android:minHeight="50dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:text="@string/dump_enable"
+        android:textOff="@string/item_dump_off"
+        android:textOn="@string/item_dump_on" />
+
+    <View
+        android:id="@+id/divider_encrypt"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@drawable/list_divider_material" />
+
+    <Switch
+        android:id="@+id/dump_encrypt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dump_items_press_selector"
+        android:gravity="center_vertical"
+        android:minHeight="50dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:text="@string/dump_encrypt"
+        android:textOff="@string/item_dump_off"
+        android:textOn="@string/item_dump_on" />
+
+    <View
+        android:id="@+id/divider_bigdata"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@drawable/list_divider_material" />
+
+    <Switch
+        android:id="@+id/dump_bigdata"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dump_items_press_selector"
+        android:gravity="center_vertical"
+        android:minHeight="50dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:text="@string/dump_bigdata"
+        android:textOff="@string/item_dump_off"
+        android:textOn="@string/item_dump_on" />
+
+    <View
+        android:id="@+id/divider_dump_all"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@drawable/list_divider_material" />
+
+    <CheckBox
+        android:id="@+id/dump_all"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:button="@null"
+        android:drawableRight="?android:attr/listChoiceIndicatorMultiple"
+        android:background="@drawable/dump_items_press_selector"
+        android:gravity="center_vertical"
+        android:minHeight="50dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:text="@string/dump_all" />
+
+    <View
+        android:id="@+id/divider_path"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@drawable/list_divider_material" />
+
+    <LinearLayout
+        android:id="@+id/dump_path"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dump_items_press_selector"
+        android:minHeight="50dp"
+        android:orientation="horizontal"
+        android:paddingLeft="20dp" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/dump_path"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/dump_path_detail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:paddingLeft="20dp"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/divider_op"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@drawable/list_divider_material" />
+
+    <LinearLayout
+        android:id="@+id/dump_op"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dump_items_press_selector"
+        android:minHeight="50dp"
+        android:orientation="vertical"
+        android:paddingTop="20dp"
+        android:paddingLeft="20dp" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/dump_operation"
+            android:textSize="16sp" />
+
+        <Spinner
+            android:id="@+id/dump_op_selector"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:entries="@array/dump_op_array" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/dump_result"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dump_items_press_selector"
+        android:minHeight="50dp"
+        android:orientation="vertical"
+        android:paddingTop="20dp"
+        android:paddingLeft="20dp" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/dump_operation_result"
+            android:textSize="16sp" />
+
+        <Spinner
+            android:id="@+id/dump_result_selector"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:entries="@array/dump_op_result_array" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/dump_op_data"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dump_items_press_selector"
+        android:minHeight="50dp"
+        android:orientation="vertical"
+        android:paddingTop="20dp"
+        android:paddingLeft="20dp" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/dump_operation_data"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/op_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:paddingLeft="20dp"
+            android:text="@string/dump_path"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/divider_reset"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:paddingTop="20dp"
+        android:background="@drawable/list_divider_material" />
+
+</LinearLayout>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2013-2016, Shenzhen Huiding Technology Co., Ltd.
+  All Rights Reserved.
+-->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+
+    <TextView
+        android:id="@+id/dump_tip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:minHeight="50dp"
+        android:paddingLeft="20dp"
+        android:layout_gravity="center_horizontal"
+        android:text="@string/dump_tip"
+        android:textSize="16sp" />
+
+    <Switch
+        android:id="@+id/dump_data"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dump_items_press_selector"
+        android:gravity="center_vertical"
+        android:minHeight="50dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:text="@string/dump_data"
+        android:textOff="@string/item_dump_off"
+        android:textOn="@string/item_dump_on" />
+
+    <View
+        android:id="@+id/dump_templates_divider"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@drawable/list_divider_material" />
+
+    <TextView
+        android:id="@+id/dump_templates"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dump_items_press_selector"
+        android:gravity="center_vertical"
+        android:minHeight="50dp"
+        android:paddingLeft="20dp"
+        android:text="@string/dump_templates"
+        android:textSize="16sp" />
+
+    <View
+        android:id="@+id/dump_base_frame_divider"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@drawable/list_divider_material" />
+
+    <TextView
+        android:id="@+id/dump_base_frame"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dump_items_press_selector"
+        android:gravity="center_vertical"
+        android:minHeight="50dp"
+        android:paddingLeft="20dp"
+        android:text="@string/dump_base_frame"
+        android:textSize="16sp" />
+
+    <View
+        android:id="@+id/dump_path_divider"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@drawable/list_divider_material" />
+
+    <LinearLayout
+        android:id="@+id/dump_path"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dump_items_press_selector"
+        android:minHeight="50dp"
+        android:orientation="horizontal"
+        android:paddingLeft="20dp" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/dump_path"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/dump_path_detail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:paddingLeft="20dp"
+            android:textSize="16sp" />
+    </LinearLayout>
+</LinearLayout>

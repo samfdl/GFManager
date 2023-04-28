@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2013-2016, Shenzhen Huiding Technology Co., Ltd.
+  All Rights Reserved.
+-->
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item
+        android:color="@color/secondary_text_default_dark"
+        android:state_enabled="true"/>
+    <item
+        android:color="@color/secondary_text_disabled"
+        android:state_enabled="false"/>
+</selector>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.goodix.gftest"
+    android:versionCode="11"
+    android:versionName="1.1.01">
+
+    <uses-sdk
+        android:minSdkVersion="21"
+        android:targetSdkVersion="33" />
+
+    <application
+        android:name=".fingerprint.GoodixFingerprintApplication"
+        android:allowBackup="false"
+        android:debuggable="false"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:screenOrientation="portrait"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name="com.goodix.gftest.TouchTestActivity"
+            android:exported="true"
+            android:icon="@drawable/ic_home"
+            android:label="FingerprintTest"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        <service android:name="com.goodix.fingerprint.service.GoodixFingerprintLocalService" />
+    </application>
+</manifest>

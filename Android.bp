@@ -1,0 +1,30 @@
+
+android_app {
+    name: "GFManager",
+
+    srcs: ["src/**/*.java"],
+
+    certificate: "platform",
+
+    platform_apis: true,
+
+    aaptflags: [ //请check是否有必要添加
+        "--auto-add-overlay",
+
+        //添加gf_manager_lib package依赖
+
+        // ANDROIDMK TRANSLATION ERROR: unsupported assignment to LOCAL_STATIC_JAVA_AAR_LIBRARIES
+        "--extra-packages com.goodix.fingerprint",
+        // LOCAL_STATIC_JAVA_AAR_LIBRARIES := gf_manager_lib                                    vendor_lib
+    ],
+
+    // ANDROIDMK TRANSLATION ERROR: unsupported assignment to LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES
+    static_libs: [                   
+                  "android-support-v4",
+                  "gf_manager_lib",
+                   ],
+    jni_libs: ["libdumpJni"],    
+}
+
+
+ 

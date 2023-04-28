@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2013-2016, Shenzhen Huiding Technology Co., Ltd.
+  All Rights Reserved.
+-->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/frr_far_settings"
+        android:icon="@drawable/ic_config_high"
+        android:showAsAction="ifRoom"
+        android:title="@string/item_setting"/>
+    <item
+        android:id="@+id/frr_far_delete"
+        android:icon="@drawable/ic_delete_high"
+        android:showAsAction="ifRoom"
+        android:title="@string/item_delete"/>
+    <item
+        android:id="@+id/frr_far_confirm"
+        android:icon="@drawable/ic_confirm_high"
+        android:showAsAction="ifRoom"
+        android:title="@string/item_confirm"/>
+
+</menu>

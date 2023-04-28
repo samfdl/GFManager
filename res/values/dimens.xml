@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2013-2016, Shenzhen Huiding Technology Co., Ltd.
+  All Rights Reserved.
+-->
+
+<resources>
+
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <!--
+         Per the design guidelines, navigation drawers should be between 240dp and 320dp:
+         https://developer.android.com/design/patterns/navigation-drawer.html
+    -->
+    <dimen name="navigation_drawer_width">240dp</dimen>
+    <dimen name="margin">16dp</dimen>
+    <dimen name="margin_small">8dp</dimen>
+    <dimen name="footview_height">40dp</dimen>
+    <dimen name="textsize">16sp</dimen>
+    <dimen name="textsize_small">12sp</dimen>
+    <dimen name="textsize_large">18sp</dimen>
+    <dimen name="padding">8dp</dimen>
+    <dimen name="padding_large">16dp</dimen>
+    <dimen name="fingerprint_animation_size">108dp</dimen>
+    <dimen name="fingerprint_progress_bar_size">264dp</dimen>
+    <dimen name="fingerprint_ring_bondary">256dp</dimen>
+    <dimen name="fingerprint_ring_outter_radius">120dp</dimen>
+    <dimen name="fingerprint_ring_inner_raidus">100dp</dimen>
+    <dimen name="fingerprint_progress_text_size">30dip</dimen>
+    <dimen name="fingerprint_bondary_width">1dp</dimen>
+    <dimen name="two_line_listview_item_height">72dp</dimen>
+    <dimen name="fingerprint_ring_radius">92dip</dimen>
+    <dimen name="fingerprint_ring_thickness">4dip</dimen>
+
+</resources>
