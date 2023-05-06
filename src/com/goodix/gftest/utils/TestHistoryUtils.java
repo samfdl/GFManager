@@ -9,7 +9,6 @@ import java.io.UnsupportedEncodingException;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -61,11 +60,11 @@ public class TestHistoryUtils {
 
         StringBuilder detailFilePath = new StringBuilder();
         detailFilePath.append(TEST_HISTORY_DIR_PATH).append(File.separatorChar)
-        .append(detailFileName);
+                .append(detailFileName);
         TEST_HISTORY_DETAIL_FILE_PATH = detailFilePath.toString();
         StringBuilder resultFilePath = new StringBuilder();
         resultFilePath.append(TEST_HISTORY_DIR_PATH).append(File.separatorChar)
-        .append(resultFileName);
+                .append(resultFileName);
         TEST_HISTORY_RESULT_FILE_PATH = resultFilePath.toString();
     }
 
@@ -80,7 +79,7 @@ public class TestHistoryUtils {
         file = new File(TEST_HISTORY_RESULT_FILE_PATH);
         if (file != null && file.exists()) {
             if (!file.delete()) {
-                  Log.e(TAG, "delete file TEST_HISTORY_RESULT_FILE_PATH error");
+                Log.e(TAG, "delete file TEST_HISTORY_RESULT_FILE_PATH error");
             }
         }
     }
@@ -118,45 +117,45 @@ public class TestHistoryUtils {
 
     // dedicated patch function for TEST_BIO_ASSAY
     public static void addDetail(int testId, HashMap<Integer, Object> result1,
-            HashMap<Integer, Object> result2) {
+                                 HashMap<Integer, Object> result2) {
         StringBuilder sb = new StringBuilder();
 
         if (testId == TestResultChecker.TEST_BIO_CALIBRATION) {
             if (result1 != null) {
                 sb.append("base0=").append(result1.get(TestResultParser.TEST_TOKEN_HBD_BASE))
-                .append(",");
+                        .append(",");
                 sb.append("r0=").append(result1.get(TestResultParser.TEST_TOKEN_HBD_AVG))
-                .append(",");
+                        .append(",");
                 sb.append("error_code=")
-                .append(result1.get(TestResultParser.TEST_TOKEN_ERROR_CODE));
+                        .append(result1.get(TestResultParser.TEST_TOKEN_ERROR_CODE));
             }
             if (result2 != null) {
                 sb.append("\n");
                 sb.append("base1=").append(result2.get(TestResultParser.TEST_TOKEN_HBD_BASE))
-                .append(",");
+                        .append(",");
                 sb.append("r1=").append(result2.get(TestResultParser.TEST_TOKEN_HBD_AVG))
-                .append(",");
+                        .append(",");
                 sb.append("error_code=")
-                .append(result2.get(TestResultParser.TEST_TOKEN_ERROR_CODE));
+                        .append(result2.get(TestResultParser.TEST_TOKEN_ERROR_CODE));
             }
         } else if (testId == TestResultChecker.TEST_HBD_CALIBRATION) {
             if (result1 != null) {
                 sb.append("base2=").append(result1.get(TestResultParser.TEST_TOKEN_HBD_BASE))
-                .append(",");
+                        .append(",");
                 sb.append("r2=").append(result1.get(TestResultParser.TEST_TOKEN_HBD_AVG))
-                .append(",");
+                        .append(",");
                 sb.append("error_code=")
-                .append(result1.get(TestResultParser.TEST_TOKEN_ERROR_CODE));
+                        .append(result1.get(TestResultParser.TEST_TOKEN_ERROR_CODE));
             }
             if (result2 != null) {
                 sb.append("\n");
                 sb.append("r3=").append(result2.get(TestResultParser.TEST_TOKEN_HBD_AVG))
-                .append(",");
+                        .append(",");
                 sb.append("electricity=")
-                .append(result2.get(TestResultParser.TEST_TOKEN_ELECTRICITY_VALUE))
-                .append(",");
+                        .append(result2.get(TestResultParser.TEST_TOKEN_ELECTRICITY_VALUE))
+                        .append(",");
                 sb.append("error_code=")
-                .append(result2.get(TestResultParser.TEST_TOKEN_ERROR_CODE));
+                        .append(result2.get(TestResultParser.TEST_TOKEN_ERROR_CODE));
             }
         }
         addDetail(testId, sb.toString());
@@ -165,7 +164,7 @@ public class TestHistoryUtils {
     public static void addDetail(int testId, HashMap<Integer, Object> result) {
         StringBuilder sb = new StringBuilder();
         if (result != null) {
-            for (Entry<Integer, Object> entry: result.entrySet()) {
+            for (Entry<Integer, Object> entry : result.entrySet()) {
                 switch (entry.getKey()) {
                     case TestResultParser.TEST_TOKEN_ERROR_CODE:
                         sb.append("error_code=");
@@ -278,12 +277,12 @@ public class TestHistoryUtils {
                     case TestResultParser.TEST_TOKEN_LOCAL_SMALL_BAD_PIXEL_NUM:
                         sb.append("local_small_bad_pixel=");
                         sb.append(entry.getValue());
-                    break;
+                        break;
 
                     case TestResultParser.TEST_TOKEN_LOCAL_BIG_BAD_PIXEL_NUM:
                         sb.append("local_big_bad_pixel=");
                         sb.append(entry.getValue());
-                    break;
+                        break;
 
                     case TestResultParser.TEST_TOKEN_ALL_TILT_ANGLE:
                         sb.append("all_tilt_angle=");
@@ -547,7 +546,7 @@ public class TestHistoryUtils {
         if (result == null) {
             return;
         }
-        try{
+        try {
             addDetail(testId, result.getBytes("utf-8"));
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -574,7 +573,7 @@ public class TestHistoryUtils {
         if (result == null) {
             return;
         }
-        try{
+        try {
             addResult(testId, result.getBytes("utf-8"));
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -701,4 +700,3 @@ public class TestHistoryUtils {
         return testResult;
     }
 }
-

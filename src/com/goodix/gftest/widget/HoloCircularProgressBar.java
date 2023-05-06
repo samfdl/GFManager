@@ -2,7 +2,6 @@
  * Copyright (C) 2013-2016, Shenzhen Huiding Technology Co., Ltd.
  * All Rights Reserved.
  */
-
 package com.goodix.gftest.widget;
 
 import android.annotation.SuppressLint;
@@ -21,10 +20,9 @@ import android.view.View;
 
 import com.goodix.gftest.R;
 
-
 /**
  * HoloCircularProgressBar custom view.
- *
+ * <p>
  * https://github.com/passsy/android-HoloCircularProgressBar
  *
  * @author Pascal.Welsch
@@ -32,12 +30,6 @@ import com.goodix.gftest.R;
  * @since 05.03.2013
  */
 public class HoloCircularProgressBar extends View {
-
-    /**
-     * TAG constant for logging
-     */
-    private static final String TAG = HoloCircularProgressBar.class.getSimpleName();
-
     /**
      * used to save the super state on configuration change
      */
@@ -96,7 +88,7 @@ public class HoloCircularProgressBar extends View {
 
     /**
      * The gravity of the view. Where should the Circle be drawn within the given bounds
-     *
+     * <p>
      * {@link #computeInsets(int, int)}
      */
     private int mGravity = Gravity.CENTER;
@@ -174,7 +166,7 @@ public class HoloCircularProgressBar extends View {
 
     /**
      * The Thumb pos x.
-     *
+     * <p>
      * Care. the position is not the position of the rotated thumb. The position is only calculated
      * in {@link #onMeasure(int, int)}
      */
@@ -182,7 +174,7 @@ public class HoloCircularProgressBar extends View {
 
     /**
      * The Thumb pos y.
-     *
+     * <p>
      * Care. the position is not the position of the rotated thumb. The position is only calculated
      * in {@link #onMeasure(int, int)}
      */
@@ -670,5 +662,4 @@ public class HoloCircularProgressBar extends View {
 
         invalidate();
     }
-
 }

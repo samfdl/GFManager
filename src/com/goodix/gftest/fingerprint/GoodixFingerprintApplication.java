@@ -9,9 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import android.app.Application;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -20,7 +18,6 @@ import com.goodix.fingerprint.service.GoodixFingerprintManager;
 import com.goodix.fingerprint.service.GoodixFingerprintService;
 
 public class GoodixFingerprintApplication extends Application {
-
     private static final String TAG = "GoodixFingerprintApplication";
     private GoodixFingerprintManager mGoodixFingerprintManager = null;
 
@@ -34,9 +31,9 @@ public class GoodixFingerprintApplication extends Application {
 
             GoodixFingerprintService service = new GoodixFingerprintService(context);
             addService.invoke(null,
-                    new Object[] {
-                    Constants.GOODIX_FINGERPRINT_SERVICE_NAME, service
-            });
+                    new Object[]{
+                            Constants.GOODIX_FINGERPRINT_SERVICE_NAME, service
+                    });
             Log.d(TAG, "success to addService: " + Constants.GOODIX_FINGERPRINT_SERVICE_NAME);
         } catch (ClassNotFoundException e) {
             Log.e(TAG, "ClassNotFoundException");
@@ -56,8 +53,6 @@ public class GoodixFingerprintApplication extends Application {
     public void onCreate() {
         super.onCreate();
         Log.i(TAG, "onCreate");
-        // getService(this);
-        //mGoodixFingerprintManager = GoodixFingerprintManager.getFingerprintManager(this);
     }
 
     @Override

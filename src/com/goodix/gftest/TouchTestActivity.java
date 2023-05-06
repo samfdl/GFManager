@@ -114,7 +114,6 @@ public class TouchTestActivity extends Activity {
 
     private GoodixFingerprintManager mGoodixFingerprintManager;
     private GFConfig mConfig;
-
     private int mEnrollmentSteps = 8;
     private int mEnrollmentRemaining = 8;
 
