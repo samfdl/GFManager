@@ -54,6 +54,14 @@ public class TouchTestActivity extends Activity {
     public static final int MENU_KEY = 3;
     public static final int BACK_KEY = 4;
     public static final int KEY_STATUS_DOWN = 1;
+
+    private final int[] TEST_ITEM_DUBAI_A_SERIES_AUTO = {
+            TestResultChecker.TEST_SPI,
+            TestResultChecker.TEST_RESET_PIN,
+            TestResultChecker.TEST_INTERRUPT_PIN,
+            TestResultChecker.TEST_PIXEL,
+            TestResultChecker.TEST_PERFORMANCE,
+    };
     private ListView mListView = null;
     private AlertDialog mCountDownDialog = null;
     private static int[] TEST_ITEM = null;
@@ -119,20 +127,7 @@ public class TouchTestActivity extends Activity {
 
     private Checker mTestResultChecker;
     private boolean mIsPrevStablePassed = false;
-    private final int[] TEST_ITEM_DUBAI_A_SERIES_AUTO = {
-            TestResultChecker.TEST_SPI,
-            TestResultChecker.TEST_RESET_PIN,
-            TestResultChecker.TEST_INTERRUPT_PIN,
-            TestResultChecker.TEST_PIXEL,
-            TestResultChecker.TEST_PERFORMANCE,
-    };
-    private int spiTestR = 0;
-    private int resetTestR = 0;
-    private int intTestR = 0;
-    private int pixelTestR = 0;
-    private int pixelShortTestR = 0;
-    private int perfTestR = 0;
-    private int mTestR = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -298,26 +293,16 @@ public class TouchTestActivity extends Activity {
         startTest(TEST_ITEM[mAutoTestPosition]);
         mAutoTestPosition++;
         mAutoTestingView.setVisibility(View.VISIBLE);
-        spiTestR = 0;
-        resetTestR = 0;
-        intTestR = 0;
-        pixelTestR = 0;
-        pixelShortTestR = 0;
-        perfTestR = 0;
-        mTestR = 0;
     }
 
     private void saveTestResult(int testId, int reason) {
         mTestStatus.put(testId, reason);
         if (reason == TEST_ITEM_STATUS_TIMEOUT) {
             TestHistoryUtils.addResult(testId, "result=TIMEOUT");
-            mTestR = 1;
         } else if (reason == TEST_ITEM_STATUS_CANCELED) {
             TestHistoryUtils.addResult(testId, "result=CANCELED");
-            mTestR = 2;
         } else if (reason == TEST_ITEM_STATUS_FAILED) {
             TestHistoryUtils.addResult(testId, "result=FAILED");
-            mTestR = 3;
         } else if (reason == TEST_ITEM_STATUS_SUCCEED) {
             TestHistoryUtils.addResult(testId, "result=SUCCEED");
         } else if (reason == TEST_ITEM_STATUS_NO_SUPPORT) {
@@ -1246,7 +1231,6 @@ public class TouchTestActivity extends Activity {
 
         if (result == null) {
             Log.e(TAG, "TEST_SPI failed1");
-            spiTestR = 2;
             saveTestResult(TestResultChecker.TEST_SPI, TEST_ITEM_STATUS_FAILED);
             return;
         }
@@ -1257,11 +1241,9 @@ public class TouchTestActivity extends Activity {
 
         if (success) {
             Log.d(TAG, "TEST_SPI succeed");
-            spiTestR = 1;
             saveTestResult(TestResultChecker.TEST_SPI, TEST_ITEM_STATUS_SUCCEED);
         } else {
             Log.e(TAG, "TEST_SPI failed2");
-            spiTestR = 2;
             saveTestResult(TestResultChecker.TEST_SPI, TEST_ITEM_STATUS_FAILED);
         }
     }
@@ -1276,7 +1258,6 @@ public class TouchTestActivity extends Activity {
 
         if (result == null) {
             Log.e(TAG, "TEST_RESET_PIN failed1");
-            resetTestR = 2;
             saveTestResult(TestResultChecker.TEST_RESET_PIN, TEST_ITEM_STATUS_FAILED);
             return;
         }
@@ -1287,11 +1268,9 @@ public class TouchTestActivity extends Activity {
 
         if (success) {
             Log.d(TAG, "TEST_RESET_PIN succeed");
-            resetTestR = 1;
             saveTestResult(TestResultChecker.TEST_RESET_PIN, TEST_ITEM_STATUS_SUCCEED);
         } else {
             Log.e(TAG, "TEST_RESET_PIN failed2");
-            resetTestR = 2;
             saveTestResult(TestResultChecker.TEST_RESET_PIN, TEST_ITEM_STATUS_FAILED);
         }
     }
@@ -1306,7 +1285,6 @@ public class TouchTestActivity extends Activity {
 
         if (result == null) {
             Log.e(TAG, "TEST_INTERRUPT_PIN failed1");
-            intTestR = 2;
             saveTestResult(TestResultChecker.TEST_INTERRUPT_PIN, TEST_ITEM_STATUS_FAILED);
             return;
         }
@@ -1317,11 +1295,9 @@ public class TouchTestActivity extends Activity {
 
         if (success) {
             Log.d(TAG, "TEST_INTERRUPT_PIN succeed");
-            intTestR = 1;
             saveTestResult(TestResultChecker.TEST_INTERRUPT_PIN, TEST_ITEM_STATUS_SUCCEED);
         } else {
             Log.e(TAG, "TEST_INTERRUPT_PIN failed2");
-            intTestR = 2;
             saveTestResult(TestResultChecker.TEST_INTERRUPT_PIN, TEST_ITEM_STATUS_FAILED);
         }
     }
@@ -1337,7 +1313,6 @@ public class TouchTestActivity extends Activity {
 
         if (result == null) {
             Log.e(TAG, "TEST_PIXEL failed1");
-            pixelTestR = 2;
             saveTestResult(TestResultChecker.TEST_PIXEL, TEST_ITEM_STATUS_FAILED);
             return;
         }
@@ -1348,11 +1323,9 @@ public class TouchTestActivity extends Activity {
 
         if (success) {
             Log.d(TAG, "TEST_PIXEL succeed");
-            pixelTestR = 1;
             saveTestResult(TestResultChecker.TEST_PIXEL, TEST_ITEM_STATUS_SUCCEED);
         } else {
             Log.e(TAG, "TEST_PIXEL failed2");
-            pixelTestR = 2;
             saveTestResult(TestResultChecker.TEST_PIXEL, TEST_ITEM_STATUS_FAILED);
         }
     }
@@ -1368,7 +1341,6 @@ public class TouchTestActivity extends Activity {
 
         if (result == null) {
             Log.e(TAG, "TEST_PIXEL_SHORT_STREAK failed1");
-            pixelShortTestR = 2;
             saveTestResult(TestResultChecker.TEST_PIXEL_SHORT_STREAK, TEST_ITEM_STATUS_FAILED);
             return;
         }
@@ -1379,11 +1351,9 @@ public class TouchTestActivity extends Activity {
 
         if (success) {
             Log.d(TAG, "TEST_PIXEL_SHORT_STREAK succeed");
-            pixelShortTestR = 1;
             saveTestResult(TestResultChecker.TEST_PIXEL_SHORT_STREAK, TEST_ITEM_STATUS_SUCCEED);
         } else {
             Log.e(TAG, "TEST_PIXEL_SHORT_STREAK failed2");
-            pixelShortTestR = 2;
             saveTestResult(TestResultChecker.TEST_PIXEL_SHORT_STREAK, TEST_ITEM_STATUS_FAILED);
         }
     }
@@ -1485,7 +1455,6 @@ public class TouchTestActivity extends Activity {
 
         if (result == null) {
             Log.e(TAG, "TEST_PERFORMANCE failed1");
-            perfTestR = 2;
             saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_FAILED);
             return;
         }
@@ -1496,11 +1465,9 @@ public class TouchTestActivity extends Activity {
 
         if (success) {
             Log.d(TAG, "TEST_PERFORMANCE succeed");
-            perfTestR = 1;
             saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_SUCCEED);
         } else {
             Log.e(TAG, "TEST_PERFORMANCE failed2");
-            perfTestR = 2;
             saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_FAILED);
         }
         mAdapter.notifyDataSetChanged();
