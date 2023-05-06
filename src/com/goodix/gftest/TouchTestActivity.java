@@ -25,7 +25,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.os.Bundle;
 import android.os.CancellationSignal;
@@ -37,7 +36,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -56,11 +54,8 @@ public class TouchTestActivity extends Activity {
     public static final int MENU_KEY = 3;
     public static final int BACK_KEY = 4;
     public static final int KEY_STATUS_DOWN = 1;
-
     private ListView mListView = null;
-    private Button mDetailBtn = null;
     private AlertDialog mCountDownDialog = null;
-
     private static int[] TEST_ITEM = null;
 
     private static final int PROGRESS_BAR_MAX = 10000;
@@ -206,27 +201,6 @@ public class TouchTestActivity extends Activity {
         mAutoTestingView.setText(R.string.testing);
         mAutoTestingView.setVisibility(View.INVISIBLE);
         mListView.addHeaderView(header);
-
-        mDetailBtn = (Button) findViewById(R.id.test_detail);
-        mDetailBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-            }
-        });
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mGoodixFingerprintManager.unregisterTestCmdCallback(mTestCmdCallback);
-    }
-
-    @Override
-    public void onBackPressed() {
-        Log.d(TAG, "back press");
-        mTestR = 2;
-        setActivityResult();
-        super.onBackPressed();
     }
 
     @Override
@@ -298,6 +272,12 @@ public class TouchTestActivity extends Activity {
         mHandler.removeCallbacks(mAutoTestRunnable);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mGoodixFingerprintManager.unregisterTestCmdCallback(mTestCmdCallback);
+    }
+
     private void startAutoTest() {
         Log.d(TAG, "startAutoTest");
         mAutoTest = true;
@@ -346,7 +326,6 @@ public class TouchTestActivity extends Activity {
 
         mAdapter.notifyDataSetChanged();
         mHandler.removeCallbacks(mTimeoutRunnable);
-        setActivityResult();
         autoNextTest();
     }
 
@@ -777,7 +756,6 @@ public class TouchTestActivity extends Activity {
         }
 
         mAdapter.notifyDataSetChanged();
-        mDetailBtn.setEnabled(false);
 
         mHandler.removeCallbacks(mTimeoutRunnable);
         mHandler.postDelayed(mTimeoutRunnable, mAutoTestTimeout);
@@ -813,7 +791,6 @@ public class TouchTestActivity extends Activity {
                 mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL, null);
 
                 checkResult();
-                mDetailBtn.setEnabled(true);
 
                 mAutoTest = false;
                 Log.d(TAG, "autoNextTest mAutoTest = " + mAutoTest);
@@ -825,7 +802,6 @@ public class TouchTestActivity extends Activity {
                 finish();
             }
         } else {
-            mDetailBtn.setEnabled(true);
             mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL, null);
         }
     }
@@ -1257,31 +1233,6 @@ public class TouchTestActivity extends Activity {
         } catch (InvocationTargetException e) {
             Log.e(TAG, "InvocationTargetException");
         }
-    }
-
-    private int getTestR() {
-        if (mTestR == 1) {
-            Log.d(TAG, "test time out");
-            return 3;
-        }
-        if (mTestR == 2) {
-            Log.d(TAG, "test cancel");
-            return 4;
-        }
-        if ((spiTestR == 2) || (pixelTestR == 2) || (pixelShortTestR == 2) || (resetTestR == 2) || (intTestR == 2) || (perfTestR == 2)) {
-            Log.d(TAG, "all test fail");
-            return 2;
-        }
-        if ((spiTestR == 0) || (pixelTestR == 0) || (pixelShortTestR == 0) || (resetTestR == 0) || (intTestR == 0) || (perfTestR == 0)) {
-            Log.d(TAG, "test not finish");
-            return 0;
-        }
-        if ((spiTestR == 1) && (pixelTestR == 1) && (pixelShortTestR == 1) && (resetTestR == 1) && (intTestR == 1) && (perfTestR == 1)) {
-            Log.d(TAG, "all test success");
-            return 1;
-        }
-
-        return 0;
     }
 
     private void onTestSpi(final HashMap<Integer, Object> result) {
@@ -2457,16 +2408,5 @@ public class TouchTestActivity extends Activity {
                             }
                         })
                 .show();
-    }
-
-    private void setActivityResult() {
-        if (getTestR() == 0) {
-            Log.d(TAG, "test not finish2");
-            return;
-        }
-        Log.d(TAG, "test exit,result = " + getTestR());
-        Intent intent = new Intent();
-        intent.putExtra("TouchTest", getTestR());
-        TouchTestActivity.this.setResult(RESULT_OK, intent);
     }
 }
