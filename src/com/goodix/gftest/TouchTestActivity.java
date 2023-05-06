@@ -50,6 +50,7 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -162,10 +163,10 @@ public class TouchTestActivity extends Activity {
         try {
             Object fingerprintManager = getSystemService("fingerprint");
             Method isHardwareDetectedMethod = fingerprintManager.getClass().getMethod(
-                    "isHardwareDetected", new Class[] {});
+                    "isHardwareDetected", new Class[]{});
             isHardwareDetectedMethod.setAccessible(true);
             isHardwareDetected = (Boolean) isHardwareDetectedMethod.invoke(fingerprintManager,
-                    new Object[] {});
+                    new Object[]{});
         } catch (IllegalAccessException e) {
         } catch (IllegalArgumentException e) {
         } catch (InvocationTargetException e) {
@@ -205,7 +206,7 @@ public class TouchTestActivity extends Activity {
 
             @Override
             public void onItemClick(AdapterView<?> parent, View view,
-                    int position, long id) {
+                                    int position, long id) {
 
                 if (0 == mSensorValidityTestFlag) {
                     return;
@@ -271,6 +272,7 @@ public class TouchTestActivity extends Activity {
         super.onDestroy();
         mGoodixFingerprintManager.unregisterTestCmdCallback(mTestCmdCallback);
     }
+
     @Override
     public void onBackPressed() {
         Log.d(TAG, "back press");
@@ -287,7 +289,7 @@ public class TouchTestActivity extends Activity {
         //mGoodixFingerprintManager.registerTestCmdCallback(mTestCmdCallback);
 
         if (null != mConfig && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
-            || Constants.GF_MILAN_HV == mConfig.mChipSeries || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES)) {
+                || Constants.GF_MILAN_HV == mConfig.mChipSeries || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES)) {
             Log.d(TAG, "TEST_CHECK_SENSOR_TEST_INFO start");
             if (mIsSensorValidityTested == false) {
                 mSensorValidityTestFlag = 0;
@@ -431,7 +433,7 @@ public class TouchTestActivity extends Activity {
 
     // dedicated patch function for TEST_BIO_ASSAY
     private void saveTestDetail(int testId, HashMap<Integer, Object> result1,
-            HashMap<Integer, Object> result2) {
+                                HashMap<Integer, Object> result2) {
         if (testId == TestResultChecker.TEST_BIO_CALIBRATION
                 || testId == TestResultChecker.TEST_HBD_CALIBRATION) {
             TestHistoryUtils.addDetail(testId, result1, result2);
@@ -832,9 +834,7 @@ public class TouchTestActivity extends Activity {
                 if (mIsPrevStablePassed == true) {
                     mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
                     mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_TWILL_BADPOINT);
-                }
-                else
-                {
+                } else {
                     if (mToast != null) {
                         mToast.cancel();
                     }
@@ -850,9 +850,7 @@ public class TouchTestActivity extends Activity {
                 if (mIsPrevStablePassed == true) {
                     mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
                     mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_NOISE);
-                }
-                else
-                {
+                } else {
                     if (mToast != null) {
                         mToast.cancel();
                     }
@@ -1060,10 +1058,10 @@ public class TouchTestActivity extends Activity {
                 case TestResultChecker.TEST_PIXEL:
                     if (mConfig != null
                             && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
-                                    || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES
-                                    || mConfig.mChipSeries == Constants.GF_MILAN_A_SERIES
-                                    || mConfig.mChipSeries == Constants.GF_MILAN_HV
-                                    || mConfig.mChipSeries == Constants.GF_MILAN_AN_SERIES)) {
+                            || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES
+                            || mConfig.mChipSeries == Constants.GF_MILAN_A_SERIES
+                            || mConfig.mChipSeries == Constants.GF_MILAN_HV
+                            || mConfig.mChipSeries == Constants.GF_MILAN_AN_SERIES)) {
                         holder.titleView.setText(R.string.test_pixel_open);
                     } else {
                         holder.titleView.setText(R.string.test_sensor);
@@ -1074,10 +1072,10 @@ public class TouchTestActivity extends Activity {
                 case TestResultChecker.TEST_PIXEL_SHORT_STREAK:
                     if (mConfig != null
                             && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
-                                    || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES
-                                    || mConfig.mChipSeries == Constants.GF_MILAN_A_SERIES
-                                    || mConfig.mChipSeries == Constants.GF_MILAN_HV
-                                    || mConfig.mChipSeries == Constants.GF_MILAN_AN_SERIES)) {
+                            || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES
+                            || mConfig.mChipSeries == Constants.GF_MILAN_A_SERIES
+                            || mConfig.mChipSeries == Constants.GF_MILAN_HV
+                            || mConfig.mChipSeries == Constants.GF_MILAN_AN_SERIES)) {
                         holder.titleView.setText(R.string.test_pixel_short_streak);
                     } else {
                         holder.titleView.setText(R.string.test_sensor);
@@ -1296,7 +1294,7 @@ public class TouchTestActivity extends Activity {
                     break;
                 }
 
-                case TEST_ITEM_STATUS_WAIT_FINGER_DOWN:{
+                case TEST_ITEM_STATUS_WAIT_FINGER_DOWN: {
                     holder.resultView.setVisibility(View.VISIBLE);
                     holder.resultView.setText(R.string.wait_finger_down_tip);
                     holder.resultView.setTextColor(getResources().getColor(R.color.fg_color));
@@ -1305,7 +1303,7 @@ public class TouchTestActivity extends Activity {
                     break;
                 }
 
-                case TEST_ITEM_STATUS_WAIT_FINGER_UP:{
+                case TEST_ITEM_STATUS_WAIT_FINGER_UP: {
                     holder.resultView.setVisibility(View.VISIBLE);
                     holder.resultView.setText(R.string.wait_finger_up_tip);
                     holder.resultView.setTextColor(getResources().getColor(R.color.fg_color));
@@ -1314,7 +1312,7 @@ public class TouchTestActivity extends Activity {
                     break;
                 }
 
-                case TEST_ITEM_STATUS_NO_SUPPORT:{
+                case TEST_ITEM_STATUS_NO_SUPPORT: {
                     holder.resultView.setVisibility(View.VISIBLE);
                     //holder.testingView.setVisibility(View.INVISIBLE);
                     holder.resultView.setText(R.string.test_no_support);
@@ -1323,7 +1321,7 @@ public class TouchTestActivity extends Activity {
                     break;
                 }
 
-                default:{
+                default: {
                     break;
                 }
             }
@@ -1345,10 +1343,10 @@ public class TouchTestActivity extends Activity {
 
         try {
             Class<?> systemPropertiesClazz = Class.forName("android.os.SystemProperties");
-            Method method = systemPropertiesClazz.getMethod("getLong", new Class[] {
+            Method method = systemPropertiesClazz.getMethod("getLong", new Class[]{
                     String.class, long.class
             });
-            mAutoTestTimeout = (Long) method.invoke(null, new Object[] {
+            mAutoTestTimeout = (Long) method.invoke(null, new Object[]{
                     Constants.PROPERTY_TEST_ITME_TIMEOUT,
                     Constants.TEST_TIMEOUT_MS
             });
@@ -1367,23 +1365,23 @@ public class TouchTestActivity extends Activity {
     }
 
     private int getTestR() {
-        if(mTestR == 1) {
+        if (mTestR == 1) {
             Log.d(TAG, "test time out");
             return 3;
         }
-        if(mTestR == 2) {
+        if (mTestR == 2) {
             Log.d(TAG, "test cancel");
             return 4;
         }
-        if((spiTestR == 2) || (pixelTestR == 2) || (pixelShortTestR == 2) || (resetTestR == 2) || (intTestR ==2) || (perfTestR == 2)) {
+        if ((spiTestR == 2) || (pixelTestR == 2) || (pixelShortTestR == 2) || (resetTestR == 2) || (intTestR == 2) || (perfTestR == 2)) {
             Log.d(TAG, "all test fail");
             return 2;
         }
-        if((spiTestR == 0) || (pixelTestR == 0) || (pixelShortTestR == 0) || (resetTestR == 0) || (intTestR ==0) || (perfTestR == 0)) {
+        if ((spiTestR == 0) || (pixelTestR == 0) || (pixelShortTestR == 0) || (resetTestR == 0) || (intTestR == 0) || (perfTestR == 0)) {
             Log.d(TAG, "test not finish");
             return 0;
         }
-        if((spiTestR == 1) && (pixelTestR == 1) && (pixelShortTestR == 1) && (resetTestR == 1) && (intTestR ==1) && (perfTestR == 1)) {
+        if ((spiTestR == 1) && (pixelTestR == 1) && (pixelShortTestR == 1) && (resetTestR == 1) && (intTestR == 1) && (perfTestR == 1)) {
             Log.d(TAG, "all test success");
             return 1;
         }
@@ -1512,6 +1510,7 @@ public class TouchTestActivity extends Activity {
             saveTestResult(TestResultChecker.TEST_PIXEL, TEST_ITEM_STATUS_FAILED);
         }
     }
+
     private void onTestSensorShortStreak(final HashMap<Integer, Object> result) {
         Log.d(TAG, "TEST_PIXEL_SHORT_STREAK end");
 
@@ -1641,7 +1640,7 @@ public class TouchTestActivity extends Activity {
 
         if (result == null) {
             Log.e(TAG, "TEST_PERFORMANCE failed1");
-			perfTestR = 2;
+            perfTestR = 2;
             saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_FAILED);
             return;
         }
@@ -1652,11 +1651,11 @@ public class TouchTestActivity extends Activity {
 
         if (success) {
             Log.d(TAG, "TEST_PERFORMANCE succeed");
-			perfTestR = 1;
+            perfTestR = 1;
             saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_SUCCEED);
         } else {
             Log.e(TAG, "TEST_PERFORMANCE failed2");
-			perfTestR = 2;
+            perfTestR = 2;
             saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_FAILED);
         }
         mAdapter.notifyDataSetChanged();
@@ -1882,7 +1881,7 @@ public class TouchTestActivity extends Activity {
         int fpcCanTest = 0;
         int currentCmd = mAutoTestPosition - 1;
 
-        if((currentCmd > TEST_ITEM.length) || (currentCmd < 0)) {
+        if ((currentCmd > TEST_ITEM.length) || (currentCmd < 0)) {
             Log.d(TAG, "[onTestFpcKeyEnStatus] currentCmd out = " + currentCmd);
             return;
         }
@@ -1906,7 +1905,7 @@ public class TouchTestActivity extends Activity {
         if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_RAWDATA)) {
             byte[] fpcKeyRawData = (byte[]) result.get(TestResultParser.TEST_TOKEN_FPC_KEY_RAWDATA);
             short rawdata = (short) (fpcKeyRawData[0] & 0x00FF | fpcKeyRawData[1] << 8);
-            Log.d(TAG, "test fpcKeyRawData: " + rawdata );
+            Log.d(TAG, "test fpcKeyRawData: " + rawdata);
             for (int i = 0; i < fpcKeyRawData.length; i++) {
                 Log.d(TAG, " " + Integer.toHexString(0xFF & fpcKeyRawData[i]));
             }
@@ -1915,7 +1914,7 @@ public class TouchTestActivity extends Activity {
         if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_CANCELDATA)) {
             byte[] fpcKeyCancel = (byte[]) result.get(TestResultParser.TEST_TOKEN_FPC_KEY_CANCELDATA);
             short canceldata = (short) (fpcKeyCancel[0] & 0x00FF | fpcKeyCancel[1] << 8);
-            Log.d(TAG, "test canceldata: " + canceldata );
+            Log.d(TAG, "test canceldata: " + canceldata);
             for (int i = 0; i < fpcKeyCancel.length; i++) {
                 Log.d(TAG, " " + Integer.toHexString(0xFF & fpcKeyCancel[i]));
             }
@@ -1931,13 +1930,13 @@ public class TouchTestActivity extends Activity {
         saveTestDetail(TEST_ITEM[currentCmd], result);
 
         mAdapter.notifyDataSetChanged();
-}
+    }
 
     private void onTestFpcKeyEvent(final HashMap<Integer, Object> result) {
         int event = 0;
         int status = 0;
         int currentCmd = mAutoTestPosition - 1;
-        if((currentCmd > TEST_ITEM.length) || (currentCmd < 0)) {
+        if ((currentCmd > TEST_ITEM.length) || (currentCmd < 0)) {
             Log.d(TAG, "[onTestFpcKeyEvent] currentCmd out = " + currentCmd);
             return;
         }
@@ -2106,7 +2105,7 @@ public class TouchTestActivity extends Activity {
                 if (mTestStatus
                         .get(TestResultChecker.TEST_BIO_CALIBRATION) == TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT
                         || mTestStatus.get(
-                                TestResultChecker.TEST_HBD_CALIBRATION) == TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT) {
+                        TestResultChecker.TEST_HBD_CALIBRATION) == TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT) {
                     startTestBioCalibration();
                 }
             } else {
@@ -2285,7 +2284,7 @@ public class TouchTestActivity extends Activity {
                                                 new DialogInterface.OnClickListener() {
                                                     @Override
                                                     public void onClick(DialogInterface dialog,
-                                                            int which) {
+                                                                        int which) {
                                                         // finish();
                                                     }
                                                 })
@@ -2319,7 +2318,7 @@ public class TouchTestActivity extends Activity {
                             if (mTestStatus
                                     .get(TestResultChecker.TEST_BIO_CALIBRATION) == TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT
                                     || mTestStatus.get(
-                                            TestResultChecker.TEST_HBD_CALIBRATION) == TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT) {
+                                    TestResultChecker.TEST_HBD_CALIBRATION) == TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT) {
                                 startTestBioCalibration();
                             }
                             break;
@@ -2333,11 +2332,11 @@ public class TouchTestActivity extends Activity {
                         case Constants.CMD_TEST_FPC_KEY: {
                             if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_EN_FLAG)) {
                                 onTestFpcKeyEnStatus(result);
-                            } else if(result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_EVENT)) {
+                            } else if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_EVENT)) {
                                 onTestFpcKeyEvent(result);
                             }
                             break;
-                            }
+                        }
 
                         case Constants.CMD_TEST_STABLE_FACTOR:
                             if (mTestStatus.get(
@@ -2374,7 +2373,7 @@ public class TouchTestActivity extends Activity {
 
 
                             if (null != mConfig && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
-                                || Constants.GF_MILAN_HV == mConfig.mChipSeries || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES)) {
+                                    || Constants.GF_MILAN_HV == mConfig.mChipSeries || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES)) {
                                 Log.d(TAG, "TEST_CHECK_SENSOR_TEST_INFO start");
                                 if (mIsSensorValidityTested == false) {
                                     mSensorValidityTestFlag = 0;
@@ -2491,7 +2490,9 @@ public class TouchTestActivity extends Activity {
                         TEST_ITEM_STATUS_AUTHENGICATING);
                 mAdapter.notifyDataSetChanged();
             }
-        };
+        }
+
+        ;
 
         @Override
         public void onAuthenticationError(int errorCode, CharSequence errString) {
@@ -2527,8 +2528,8 @@ public class TouchTestActivity extends Activity {
     private void downLoadCfgForFPCKey() {
         byte[] cfgData = readFwCfgFile("GF5236_FpcEn.cfg");
         if (null == cfgData) {
-           Log.e(TAG, "fail to read FW cfg file");
-           return;
+            Log.e(TAG, "fail to read FW cfg file");
+            return;
         }
         if (cfgData.length != GF_MILAN_A_SERIES_CFG_LENGTH && cfgData.length != GF_MILAN_AN_SERIES_CFG_LENGTH) {
             Log.e(TAG, "invalid cfg file, length err, len " + cfgData.length);
@@ -2557,7 +2558,7 @@ public class TouchTestActivity extends Activity {
                 if (null != fin)
                     fin.close();
             } catch (IOException ee) {
-                 ee.printStackTrace();
+                ee.printStackTrace();
             }
             Log.e(TAG, "Failed to open " + fileName);
         }
@@ -2582,19 +2583,20 @@ public class TouchTestActivity extends Activity {
         }
 
         new AlertDialog.Builder(this)
-        .setTitle(this.getString(R.string.sytem_info))
-        .setMessage(this.getString(message))
-        .setPositiveButton(this.getString(R.string.ok),
-                new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        })
-        .show();
+                .setTitle(this.getString(R.string.sytem_info))
+                .setMessage(this.getString(message))
+                .setPositiveButton(this.getString(R.string.ok),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                .show();
     }
+
     private void setActivityResult() {
-        if(getTestR() == 0) {
+        if (getTestR() == 0) {
             Log.d(TAG, "test not finish2");
             return;
         }
@@ -2602,7 +2604,7 @@ public class TouchTestActivity extends Activity {
         //mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL, null);
         //mGoodixFingerprintManager.unregisterTestCmdCallback(mTestCmdCallback);
         Intent intent = new Intent();
-        intent.putExtra("TouchTest",getTestR());
+        intent.putExtra("TouchTest", getTestR());
         TouchTestActivity.this.setResult(RESULT_OK, intent);
         //TouchTestActivity.this.finish();
         //System.exit(0);
