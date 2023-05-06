@@ -128,7 +128,6 @@ public class TouchTestActivity extends Activity {
     private Checker mTestResultChecker;
     private boolean mIsPrevStablePassed = false;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -136,6 +135,866 @@ public class TouchTestActivity extends Activity {
 
         mGoodixFingerprintManager = GoodixFingerprintManager.getFingerprintManager(TouchTestActivity.this);
         mGoodixFingerprintManager.registerTestCmdCallback(mTestCmdCallback);
+    }
+
+    private TestCmdCallback mTestCmdCallback = new TestCmdCallback() {
+        @Override
+        public void onTestCmd(final int cmdId, final HashMap<Integer, Object> result) {
+            Log.d(TAG, "onTestCmd " + Constants.testCmdIdToString(cmdId));
+
+            if ((result == null || mTestResultChecker == null) && cmdId != Constants.CMD_INIT_CALLBACK) {
+                Log.e(TAG, "GFManager may be wrong");
+                return;
+            }
+
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    switch (cmdId) {
+                        case Constants.CMD_TEST_SPI:
+                            if (mTestStatus.get(TestResultChecker.TEST_SPI) == TEST_ITEM_STATUS_TESTING) {
+                                onTestSpi(result);
+                            } else if (mTestStatus.get(
+                                    TestResultChecker.TEST_FW_VERSION) == TEST_ITEM_STATUS_TESTING) {
+                                onTestFWVersion(result);
+                            }
+                            break;
+
+                        case Constants.CMD_TEST_PIXEL_OPEN:
+                            if (mTestStatus.get(
+                                    TestResultChecker.TEST_PIXEL) == TEST_ITEM_STATUS_TESTING) {
+                                onTestSensor(result);
+                            }
+                            break;
+
+                        case Constants.CMD_TEST_PIXEL_SHORT_STREAK:
+                            if (mTestStatus.get(
+                                    TestResultChecker.TEST_PIXEL_SHORT_STREAK) == TEST_ITEM_STATUS_TESTING) {
+                                onTestSensorShortStreak(result);
+                            }
+                            break;
+
+                        case Constants.CMD_TEST_RESET_PIN:
+                            if (mTestStatus.get(
+                                    TestResultChecker.TEST_RESET_PIN) == TEST_ITEM_STATUS_TESTING) {
+                                onTestResetPin(result);
+                            }
+                            break;
+
+                        case Constants.CMD_TEST_SENSOR_FINE:
+                            if (mTestStatus.get(
+                                    TestResultChecker.TEST_SENSOR_FINE) == TEST_ITEM_STATUS_TESTING) {
+                                onTestSensorFine(result);
+                            }
+                            break;
+
+                        case Constants.CMD_TEST_INTERRUPT_PIN:
+                            if (mTestStatus.get(
+                                    TestResultChecker.TEST_INTERRUPT_PIN) == TEST_ITEM_STATUS_TESTING) {
+                                onTestInterruptPin(result);
+                            }
+                            break;
+
+                        case Constants.CMD_TEST_BAD_POINT:
+                            if (mTestStatus.get(
+                                    TestResultChecker.TEST_BAD_POINT) == TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT) {
+                                onTestBadPoint(result);
+                            }
+                            break;
+                        case Constants.CMD_TEST_PERFORMANCE:
+                            if (mTestStatus.get(
+                                    TestResultChecker.TEST_ALGO) != null && (mTestStatus.get(
+                                    TestResultChecker.TEST_ALGO) == TEST_ITEM_STATUS_WAIT_FINGER_INPUT)) {
+                                onTestAlgo(result);
+                            } else if (mTestStatus.get(
+                                    TestResultChecker.TEST_CAPTURE) != null && (mTestStatus.get(
+                                    TestResultChecker.TEST_CAPTURE) == TEST_ITEM_STATUS_WAIT_FINGER_INPUT)) {
+                                onTestCapture(result);
+                            } else if (mTestStatus.get(
+                                    TestResultChecker.TEST_PERFORMANCE) != null && (mTestStatus.get(
+                                    TestResultChecker.TEST_PERFORMANCE) == TEST_ITEM_STATUS_WAIT_FINGER_INPUT)) {
+                                onTestPerformance(result);
+                            }
+                            break;
+
+                        case Constants.CMD_TEST_SENSOR_VALIDITY:
+                            if (null != mDialog) {
+                                mDialog.cancel();
+                            }
+                            if (result.containsKey(TestResultParser.TEST_TOKEN_SENSOR_VALIDITY)) {
+                                mSensorValidityTestFlag = (Integer) result
+                                        .get(TestResultParser.TEST_TOKEN_SENSOR_VALIDITY);
+                            }
+
+                            mIsSensorValidityTested = true;
+                            if (0 == mSensorValidityTestFlag) {
+                                Log.i(TAG, "Sensor validity test Fail");
+                                new AlertDialog.Builder(TouchTestActivity.this)
+                                        .setTitle(TouchTestActivity.this.getString(R.string.sytem_info))
+                                        .setMessage(TouchTestActivity.this
+                                                .getString(R.string.sensor_validity_test_fail))
+                                        .setPositiveButton(TouchTestActivity.this.getString(R.string.ok),
+                                                new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                    }
+                                                })
+                                        .show();
+                            } else {
+                                // the trick to update view to gray
+                                mAutoTestingTitleView.setEnabled(true);
+                                mAdapter.notifyDataSetChanged();
+                                Log.i(TAG, "Sensor validity test Pass");
+                            }
+                            break;
+
+                        case Constants.CMD_TEST_BIO_CALIBRATION:
+                            if (mTestStatus.get(
+                                    TestResultChecker.TEST_BIO_CALIBRATION) == TEST_ITEM_STATUS_TESTING) {
+                                // step 1
+                                onTestBioCalibrationWithFingerUntouch(result);
+                            } else if (mTestStatus.get(
+                                    TestResultChecker.TEST_BIO_CALIBRATION) == TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT) {
+                                // step 2
+                                onTestBioCalibrationWithFingerTouch(result);
+                            } else if (mTestStatus.get(
+                                    TestResultChecker.TEST_HBD_CALIBRATION) == TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT) {
+                                onTestHbdCalibrationStep1(result);
+                            }
+                            break;
+                        case Constants.CMD_TEST_HBD_CALIBRATION:
+                            onTestHbdCalibrationStep2(result);
+                            break;
+                        case Constants.CMD_TEST_CHECK_FINGER_EVENT:
+                            if (mTestStatus
+                                    .get(TestResultChecker.TEST_BIO_CALIBRATION) == TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT
+                                    || mTestStatus.get(
+                                    TestResultChecker.TEST_HBD_CALIBRATION) == TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT) {
+                                startTestBioCalibration();
+                            }
+                            break;
+                        case Constants.CMD_TEST_RAWDATA_SATURATED:
+                            if (mTestStatus.get(
+                                    TestResultChecker.TEST_RAWDATA_SATURATED) == TEST_ITEM_STATUS_WAIT_FINGER_INPUT) {
+                                onTestRawdataSaturated(result);
+                            }
+                            break;
+
+                        case Constants.CMD_TEST_FPC_KEY: {
+                            if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_EN_FLAG)) {
+                                onTestFpcKeyEnStatus(result);
+                            } else if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_EVENT)) {
+                                onTestFpcKeyEvent(result);
+                            }
+                            break;
+                        }
+
+                        case Constants.CMD_TEST_STABLE_FACTOR:
+                            if (mTestStatus.get(
+                                    TestResultChecker.TEST_STABLE_FACTOR) == TEST_ITEM_STATUS_WAIT_TWILL_INPUT) {
+                                onTestStableFactor(result);
+                            }
+                            break;
+
+                        case Constants.CMD_TEST_TWILL_BADPOINT:
+                            onTestTwillBadpoint(result);
+                            break;
+
+                        case Constants.CMD_TEST_NOISE:
+                            onTestSnr(result);
+                            break;
+
+                        case Constants.CMD_INIT_CALLBACK: {
+                            mConfig = mGoodixFingerprintManager.getConfig();
+
+                            Log.i(TAG, "mConfig.mChipSeries = " + mConfig.mChipSeries + "; mConfig.mChipType = " + mConfig.mChipType);
+                            if (null != mConfig && mConfig.mChipType != Constants.GF_CHIP_UNKNOWN) {
+                                mTestResultChecker = TestResultChecker.getInstance().getTestResultCheckerFactory().createCheckerByChip(mConfig.mChipSeries, mConfig.mChipType);
+                                TEST_ITEM = TEST_ITEM_DUBAI_A_SERIES_AUTO;
+                                // set default enrolling min templates
+                                mEnrollmentSteps = mConfig.mEnrollingMinTemplates;
+                                mEnrollmentRemaining = mEnrollmentSteps;
+                            }
+                            initView();
+
+                            // save result to "/data/data/com.goodix.gftest/files/testtool.txt"
+                            TestHistoryUtils.init(getFilesDir().getPath(), "testtool.txt", "testdetail.txt");
+
+
+                            if (null != mConfig && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
+                                    || Constants.GF_MILAN_HV == mConfig.mChipSeries || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES)) {
+                                Log.d(TAG, "TEST_CHECK_SENSOR_TEST_INFO start");
+                                if (mIsSensorValidityTested == false) {
+                                    mSensorValidityTestFlag = 0;
+                                    mAutoTestingTitleView.setEnabled(false);
+                                    mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_SENSOR_VALIDITY);
+                                    mDialog = new ProgressDialog(TouchTestActivity.this);
+                                    mDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                                    mDialog.setCancelable(true);
+                                    mDialog.setCanceledOnTouchOutside(false);
+                                    mDialog.setMessage(TouchTestActivity.this.getString(R.string.sensor_checking));
+                                    mDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                                        @Override
+                                        public void onCancel(DialogInterface dialog) {
+                                        }
+                                    });
+                                    mDialog.show();
+                                }
+                            }
+
+                            //if can't get sensor chip_id ,no need to start runnable
+                            if (TEST_ITEM != null) {
+                                getTimeout();
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    };
+
+    private void onTestSpi(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "TEST_SPI end");
+
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_PRIOR_CANCEL);
+
+        if (mTestStatus.get(TestResultChecker.TEST_SPI) != TEST_ITEM_STATUS_TESTING) {
+            return;
+        }
+
+        if (result == null) {
+            Log.e(TAG, "TEST_SPI failed1");
+            saveTestResult(TestResultChecker.TEST_SPI, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_SPI, result);
+
+        boolean success = mTestResultChecker.checkSpiTestResult(result);
+
+        if (success) {
+            Log.d(TAG, "TEST_SPI succeed");
+            saveTestResult(TestResultChecker.TEST_SPI, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "TEST_SPI failed2");
+            saveTestResult(TestResultChecker.TEST_SPI, TEST_ITEM_STATUS_FAILED);
+        }
+    }
+
+    private void onTestResetPin(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "TEST_RESET_PIN end");
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (mTestStatus.get(TestResultChecker.TEST_RESET_PIN) != TEST_ITEM_STATUS_TESTING) {
+            return;
+        }
+
+        if (result == null) {
+            Log.e(TAG, "TEST_RESET_PIN failed1");
+            saveTestResult(TestResultChecker.TEST_RESET_PIN, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_RESET_PIN, result);
+
+        boolean success = mTestResultChecker.checkResetPinTestReuslt(result);
+
+        if (success) {
+            Log.d(TAG, "TEST_RESET_PIN succeed");
+            saveTestResult(TestResultChecker.TEST_RESET_PIN, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "TEST_RESET_PIN failed2");
+            saveTestResult(TestResultChecker.TEST_RESET_PIN, TEST_ITEM_STATUS_FAILED);
+        }
+    }
+
+    private void onTestInterruptPin(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "TEST_INTERRUPT_PIN end");
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (mTestStatus.get(TestResultChecker.TEST_INTERRUPT_PIN) != TEST_ITEM_STATUS_TESTING) {
+            return;
+        }
+
+        if (result == null) {
+            Log.e(TAG, "TEST_INTERRUPT_PIN failed1");
+            saveTestResult(TestResultChecker.TEST_INTERRUPT_PIN, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_INTERRUPT_PIN, result);
+
+        boolean success = mTestResultChecker.checkInterruptPinTestReuslt(result);
+
+        if (success) {
+            Log.d(TAG, "TEST_INTERRUPT_PIN succeed");
+            saveTestResult(TestResultChecker.TEST_INTERRUPT_PIN, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "TEST_INTERRUPT_PIN failed2");
+            saveTestResult(TestResultChecker.TEST_INTERRUPT_PIN, TEST_ITEM_STATUS_FAILED);
+        }
+    }
+
+    private void onTestSensor(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "TEST_PIXEL end");
+
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (mTestStatus.get(TestResultChecker.TEST_PIXEL) != TEST_ITEM_STATUS_TESTING) {
+            return;
+        }
+
+        if (result == null) {
+            Log.e(TAG, "TEST_PIXEL failed1");
+            saveTestResult(TestResultChecker.TEST_PIXEL, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_PIXEL, result);
+
+        boolean success = mTestResultChecker.checkPixelTestResult(result);
+
+        if (success) {
+            Log.d(TAG, "TEST_PIXEL succeed");
+            saveTestResult(TestResultChecker.TEST_PIXEL, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "TEST_PIXEL failed2");
+            saveTestResult(TestResultChecker.TEST_PIXEL, TEST_ITEM_STATUS_FAILED);
+        }
+    }
+
+    private void onTestSensorShortStreak(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "TEST_PIXEL_SHORT_STREAK end");
+
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (mTestStatus.get(TestResultChecker.TEST_PIXEL_SHORT_STREAK) != TEST_ITEM_STATUS_TESTING) {
+            return;
+        }
+
+        if (result == null) {
+            Log.e(TAG, "TEST_PIXEL_SHORT_STREAK failed1");
+            saveTestResult(TestResultChecker.TEST_PIXEL_SHORT_STREAK, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_PIXEL_SHORT_STREAK, result);
+
+        boolean success = mTestResultChecker.checkPixelShortStreakTestResult(result);
+
+        if (success) {
+            Log.d(TAG, "TEST_PIXEL_SHORT_STREAK succeed");
+            saveTestResult(TestResultChecker.TEST_PIXEL_SHORT_STREAK, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "TEST_PIXEL_SHORT_STREAK failed2");
+            saveTestResult(TestResultChecker.TEST_PIXEL_SHORT_STREAK, TEST_ITEM_STATUS_FAILED);
+        }
+    }
+
+    private void onTestSensorFine(HashMap<Integer, Object> result) {
+        Log.d(TAG, "onTestSensorFine");
+
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (mTestStatus.get(TestResultChecker.TEST_SENSOR_FINE) != TEST_ITEM_STATUS_TESTING) {
+            return;
+        }
+
+        if (result == null) {
+            Log.e(TAG, "result is null");
+            saveTestResult(TestResultChecker.TEST_SENSOR_FINE, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_SENSOR_FINE, result);
+
+        boolean success = mTestResultChecker.checkSensorFineTestResult(result);
+
+        if (success) {
+            Log.d(TAG, "test sensor fine succeed");
+            saveTestResult(TestResultChecker.TEST_SENSOR_FINE, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "test sensor fine failed");
+            saveTestResult(TestResultChecker.TEST_SENSOR_FINE, TEST_ITEM_STATUS_FAILED);
+        }
+    }
+
+    private void onTestFWVersion(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "TEST_FW_VERSION end");
+
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (mTestStatus.get(TestResultChecker.TEST_FW_VERSION) != TEST_ITEM_STATUS_TESTING) {
+            return;
+        }
+
+        if (result == null) {
+            Log.e(TAG, "TEST_FW_VERSION failed1");
+            saveTestResult(TestResultChecker.TEST_FW_VERSION, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_FW_VERSION, result);
+
+        boolean success = mTestResultChecker.checkFwVersionTestResult(result);
+        if (success) {
+            Log.d(TAG, "TEST_FW_VERSION succeed");
+            saveTestResult(TestResultChecker.TEST_FW_VERSION, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "TEST_FW_VERSION failed2");
+            saveTestResult(TestResultChecker.TEST_FW_VERSION, TEST_ITEM_STATUS_FAILED);
+        }
+    }
+
+    private void onTestBadPoint(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "TEST_BAD_POINT end");
+
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (mTestStatus
+                .get(TestResultChecker.TEST_BAD_POINT) != TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT) {
+            return;
+        }
+
+        if (result == null) {
+            Log.e(TAG, "TEST_BAD_POINT failed1");
+            saveTestResult(TestResultChecker.TEST_BAD_POINT, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_BAD_POINT, result);
+
+        boolean success = mTestResultChecker.checkBadPointTestResult(result);
+
+        if (success) {
+            Log.d(TAG, "TEST_BAD_POINT succeed");
+            saveTestResult(TestResultChecker.TEST_BAD_POINT, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "TEST_BAD_POINT failed2");
+            saveTestResult(TestResultChecker.TEST_BAD_POINT, TEST_ITEM_STATUS_FAILED);
+        }
+    }
+
+    private void onTestPerformance(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "TEST_PERFORMANCE end");
+
+        resetBioAssay();
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (mTestStatus
+                .get(TestResultChecker.TEST_PERFORMANCE) != TEST_ITEM_STATUS_WAIT_FINGER_INPUT) {
+            return;
+        }
+
+        if (result == null) {
+            Log.e(TAG, "TEST_PERFORMANCE failed1");
+            saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_PERFORMANCE, result);
+
+        boolean success = mTestResultChecker.checkPerformanceTestResult(result);
+
+        if (success) {
+            Log.d(TAG, "TEST_PERFORMANCE succeed");
+            saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "TEST_PERFORMANCE failed2");
+            saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_FAILED);
+        }
+        mAdapter.notifyDataSetChanged();
+    }
+
+    private void onTestCapture(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "TEST_CAPTURE end");
+
+        resetBioAssay();
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (mTestStatus.get(TestResultChecker.TEST_CAPTURE) != TEST_ITEM_STATUS_WAIT_FINGER_INPUT) {
+            return;
+        }
+
+        if (result == null) {
+            Log.e(TAG, "TEST_CAPTURE failed1");
+            saveTestResult(TestResultChecker.TEST_CAPTURE, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_CAPTURE, result);
+
+        boolean success = mTestResultChecker.checkCaptureTestResult(result);
+
+        if (success) {
+            Log.d(TAG, "TEST_CAPTURE succeed");
+            saveTestResult(TestResultChecker.TEST_CAPTURE, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "TEST_CAPTURE failed2");
+            saveTestResult(TestResultChecker.TEST_CAPTURE, TEST_ITEM_STATUS_FAILED);
+        }
+        mAdapter.notifyDataSetChanged();
+    }
+
+    private void onTestAlgo(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "TEST_ALGO end");
+
+        resetBioAssay();
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (mTestStatus.get(TestResultChecker.TEST_ALGO) != TEST_ITEM_STATUS_WAIT_FINGER_INPUT) {
+            return;
+        }
+
+        if (result == null) {
+            Log.e(TAG, "TEST_ALGO failed1");
+            saveTestResult(TestResultChecker.TEST_ALGO, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_ALGO, result);
+
+        boolean success = mTestResultChecker.checkAlgoTestResult(result);
+
+        if (success) {
+            Log.d(TAG, "TEST_ALGO succeed");
+            saveTestResult(TestResultChecker.TEST_ALGO, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "TEST_ALGO failed2");
+            saveTestResult(TestResultChecker.TEST_ALGO, TEST_ITEM_STATUS_FAILED);
+        }
+
+        if (mAutoTest) {
+            TestHistoryUtils.addResult("fingerup");
+        }
+
+        mAdapter.notifyDataSetChanged();
+    }
+
+    private void onTestBioCalibrationWithFingerTouch(HashMap<Integer, Object> result) {
+        resetBioAssay();
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (result == null) {
+            Log.e(TAG, "TEST_BIO_CALIBRATION failed1");
+            saveTestResult(TestResultChecker.TEST_BIO_CALIBRATION, TEST_ITEM_STATUS_FAILED);
+            saveTestDetail(TestResultChecker.TEST_BIO_CALIBRATION, mPendingBioDetail);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_BIO_CALIBRATION, mPendingBioDetail, result);
+        mPendingBioDetail = null;
+
+        boolean success = mTestResultChecker.checkBioTestResultWithTouched(result);
+        if (!success) {
+            Log.e(TAG, "TEST_BIO_CALIBRATION step 2 failed1");
+            saveTestResult(TestResultChecker.TEST_BIO_CALIBRATION, TEST_ITEM_STATUS_FAILED);
+        } else {
+            saveTestResult(TestResultChecker.TEST_BIO_CALIBRATION, TEST_ITEM_STATUS_SUCCEED);
+        }
+    }
+
+    private void onTestBioCalibrationWithFingerUntouch(HashMap<Integer, Object> result) {
+        if (result == null) {
+            Log.e(TAG, "TEST_BIO_CALIBRATION failed1");
+            saveTestResult(TestResultChecker.TEST_BIO_CALIBRATION, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        boolean success = mTestResultChecker.checkBioTestResultWithoutTouched(result);
+
+        if (!success) {
+            Log.e(TAG, "TEST_BIO_CALIBRATION step 1 failed1");
+            saveTestResult(TestResultChecker.TEST_BIO_CALIBRATION, TEST_ITEM_STATUS_FAILED);
+            saveTestDetail(TestResultChecker.TEST_BIO_CALIBRATION, result, null);
+        } else {
+            mPendingBioDetail = result;
+            mTestStatus.put(TestResultChecker.TEST_BIO_CALIBRATION,
+                    TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT);
+            mAdapter.notifyDataSetChanged();
+            startCheckFingerDownStatus();
+        }
+        if (mAutoTest) {
+            TestHistoryUtils.addResult("finger down 2");
+        }
+    }
+
+    private void onTestHbdCalibrationStep1(HashMap<Integer, Object> result) {
+        if (result == null) {
+            Log.e(TAG, "TEST_HBD_CALIBRATION failed1");
+            saveTestResult(TestResultChecker.TEST_HBD_CALIBRATION, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        boolean success = mTestResultChecker.checkBioTestResultWithTouched(result);
+
+        if (!success) {
+            Log.e(TAG, "TEST_HBD_CALIBRATION step 1 failed1");
+            saveTestResult(TestResultChecker.TEST_HBD_CALIBRATION, TEST_ITEM_STATUS_FAILED);
+            saveTestDetail(TestResultChecker.TEST_HBD_CALIBRATION, result, null);
+        } else {
+            mPendingBioDetail = result;
+            mAdapter.notifyDataSetChanged();
+            startTestHbdCalibrationStep2();
+        }
+    }
+
+    private void onTestHbdCalibrationStep2(HashMap<Integer, Object> result) {
+        resetBioAssay();
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (result == null) {
+            Log.e(TAG, "TEST_HBD_CALIBRATION failed1");
+            saveTestResult(TestResultChecker.TEST_HBD_CALIBRATION, TEST_ITEM_STATUS_FAILED);
+            saveTestDetail(TestResultChecker.TEST_HBD_CALIBRATION, mPendingBioDetail);
+            return;
+        }
+        Log.d(TAG, "onTestHbdCalibrationStep2 -------------------------------");
+        saveTestDetail(TestResultChecker.TEST_HBD_CALIBRATION, mPendingBioDetail, result);
+        mPendingBioDetail = null;
+
+        if (mAutoTest) {
+            TestHistoryUtils.addResult("fingerup");
+        }
+
+        boolean success = mTestResultChecker.checkHBDTestResultWithTouched(result);
+        if (!success) {
+            Log.e(TAG, "TEST_HBD_CALIBRATION step 2 failed1");
+            saveTestResult(TestResultChecker.TEST_HBD_CALIBRATION, TEST_ITEM_STATUS_FAILED);
+        } else {
+            saveTestResult(TestResultChecker.TEST_HBD_CALIBRATION, TEST_ITEM_STATUS_SUCCEED);
+        }
+    }
+
+    private void onTestRawdataSaturated(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "TEST_RAWDATA_SATURATED end");
+
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (mTestStatus.get(
+                TestResultChecker.TEST_RAWDATA_SATURATED) != TEST_ITEM_STATUS_WAIT_FINGER_INPUT) {
+            return;
+        }
+
+        if (result == null) {
+            Log.e(TAG, "TEST_RAWDATA_SATURATED failed1");
+            saveTestResult(TestResultChecker.TEST_RAWDATA_SATURATED, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_RAWDATA_SATURATED, result);
+
+        boolean success = mTestResultChecker.checkRawdataSaturatedTestResult(result);
+        int underSaturatedPixelCount = 0;
+        int overSaturatedPixelCount = 0;
+        int saturatedPixelThreshold = 0;
+
+        if (success) {
+            if (result.containsKey(TestResultParser.TEST_TOKEN_UNDER_SATURATED_PIXEL_COUNT)) {
+                underSaturatedPixelCount = (Integer) result
+                        .get(TestResultParser.TEST_TOKEN_UNDER_SATURATED_PIXEL_COUNT);
+            }
+            if (result.containsKey(TestResultParser.TEST_TOKEN_OVER_SATURATED_PIXEL_COUNT)) {
+                overSaturatedPixelCount = (Integer) result
+                        .get(TestResultParser.TEST_TOKEN_OVER_SATURATED_PIXEL_COUNT);
+            }
+            if (result.containsKey(TestResultParser.TEST_TOKEN_SATURATED_PIXEL_THRESHOLD)) {
+                saturatedPixelThreshold = (Integer) result
+                        .get(TestResultParser.TEST_TOKEN_SATURATED_PIXEL_THRESHOLD);
+            }
+
+            if (underSaturatedPixelCount > saturatedPixelThreshold
+                    || overSaturatedPixelCount > saturatedPixelThreshold) {
+                Log.e(TAG, "TEST_RAWDATA_CHECK failed2!");
+                saveTestResult(TestResultChecker.TEST_RAWDATA_SATURATED, TEST_ITEM_STATUS_FAILED);
+            } else {
+                Log.e(TAG, "TEST_RAWDATA_CHECK succeed!");
+                saveTestResult(TestResultChecker.TEST_RAWDATA_SATURATED, TEST_ITEM_STATUS_SUCCEED);
+            }
+        } else {
+            Log.e(TAG, "TEST_RAWDATA_CHECK failed3!");
+            saveTestResult(TestResultChecker.TEST_RAWDATA_SATURATED, TEST_ITEM_STATUS_FAILED);
+        }
+        mAdapter.notifyDataSetChanged();
+    }
+
+    private void onTestFpcKeyEnStatus(final HashMap<Integer, Object> result) {
+        int fpcKeyEn = 0;
+        int fpcKeyFailStat = 0;
+        int fpcCanTest = 0;
+        int currentCmd = mAutoTestPosition - 1;
+
+        if ((currentCmd > TEST_ITEM.length) || (currentCmd < 0)) {
+            Log.d(TAG, "[onTestFpcKeyEnStatus] currentCmd out = " + currentCmd);
+            return;
+        }
+
+        if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_FAIL_STATUS)) {
+            fpcKeyFailStat = 0x0FF & (Byte) result.get(TestResultParser.TEST_TOKEN_FPC_KEY_FAIL_STATUS);
+            Log.d(TAG, "test fpcKey fail status: " + fpcKeyFailStat);
+        }
+
+        if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_CAN_TEST)) {
+            fpcCanTest = 0x0FF & (Byte) result.get(TestResultParser.TEST_TOKEN_FPC_KEY_CAN_TEST);
+            Log.d(TAG, "test fpcCanTest: " + fpcCanTest);
+        }
+
+        if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_EN_FLAG)) {
+            fpcKeyEn = 0x0FF & (Byte) result.get(TestResultParser.TEST_TOKEN_FPC_KEY_EN_FLAG);
+            Log.d(TAG, "test fpc key en: " + Integer.toHexString(fpcKeyEn)
+                    + "cmd index=" + currentCmd);
+        }
+
+        if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_RAWDATA)) {
+            byte[] fpcKeyRawData = (byte[]) result.get(TestResultParser.TEST_TOKEN_FPC_KEY_RAWDATA);
+            short rawdata = (short) (fpcKeyRawData[0] & 0x00FF | fpcKeyRawData[1] << 8);
+            Log.d(TAG, "test fpcKeyRawData: " + rawdata);
+            for (int i = 0; i < fpcKeyRawData.length; i++) {
+                Log.d(TAG, " " + Integer.toHexString(0xFF & fpcKeyRawData[i]));
+            }
+        }
+
+        if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_CANCELDATA)) {
+            byte[] fpcKeyCancel = (byte[]) result.get(TestResultParser.TEST_TOKEN_FPC_KEY_CANCELDATA);
+            short canceldata = (short) (fpcKeyCancel[0] & 0x00FF | fpcKeyCancel[1] << 8);
+            Log.d(TAG, "test canceldata: " + canceldata);
+            for (int i = 0; i < fpcKeyCancel.length; i++) {
+                Log.d(TAG, " " + Integer.toHexString(0xFF & fpcKeyCancel[i]));
+            }
+        }
+
+        if (fpcCanTest == 0 || fpcKeyFailStat == 1) {
+            saveTestResultOnly(TEST_ITEM[currentCmd], fpcCanTest == 0 ? TEST_ITEM_STATUS_NO_SUPPORT : TEST_ITEM_STATUS_FAILED);
+            mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_FPC_KEY_RESET_FWCFG, null);
+            mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL, null);
+            mHandler.removeCallbacks(mTimeoutRunnable);
+            autoNextTest();
+        }
+        saveTestDetail(TEST_ITEM[currentCmd], result);
+
+        mAdapter.notifyDataSetChanged();
+    }
+
+    private void onTestFpcKeyEvent(final HashMap<Integer, Object> result) {
+        int event = 0;
+        int status = 0;
+        int currentCmd = mAutoTestPosition - 1;
+        if ((currentCmd > TEST_ITEM.length) || (currentCmd < 0)) {
+            Log.d(TAG, "[onTestFpcKeyEvent] currentCmd out = " + currentCmd);
+            return;
+        }
+
+        if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_EVENT)) {
+            event = (Integer) result.get(TestResultParser.TEST_TOKEN_FPC_KEY_EVENT);
+        }
+        if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_STATUS)) {
+            status = (Integer) result.get(TestResultParser.TEST_TOKEN_FPC_KEY_STATUS);
+        }
+
+        Log.d(TAG, "onTestFpcKey event: " + event + " status: " + status + " currentcmd: "
+                + currentCmd + " test item: " + TEST_ITEM[currentCmd]);
+        if (event == MENU_KEY && TEST_ITEM[currentCmd] == TestResultChecker.TEST_FPC_MENU_KEY) {
+            if (status == KEY_STATUS_DOWN) {
+                saveTestResultOnly(TEST_ITEM[currentCmd], TEST_ITEM_STATUS_SUCCEED);
+                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_FPC_KEY_RESET_FWCFG, null);
+                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL, null);
+                autoNextTest();
+            }
+        } else if (event == BACK_KEY && TEST_ITEM[currentCmd] == TestResultChecker.TEST_FPC_BACK_KEY) {
+            if (status == KEY_STATUS_DOWN) {
+                saveTestResultOnly(TEST_ITEM[currentCmd], TEST_ITEM_STATUS_SUCCEED);
+                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_FPC_KEY_RESET_FWCFG, null);
+                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL, null);
+                autoNextTest();
+            }
+        } else if (event == RING_KEY && TEST_ITEM[currentCmd] == TestResultChecker.TEST_FPC_RING_KEY) {
+            if (status == KEY_STATUS_DOWN) {
+                saveTestResultOnly(TEST_ITEM[currentCmd], TEST_ITEM_STATUS_SUCCEED);
+                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_FPC_KEY_RESET_FWCFG, null);
+                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL, null);
+                autoNextTest();
+            }
+        }
+
+        mAdapter.notifyDataSetChanged();
+    }
+
+    private void onTestStableFactor(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "TEST_STABLE_FACTOR end");
+
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (mTestStatus
+                .get(TestResultChecker.TEST_STABLE_FACTOR) != TEST_ITEM_STATUS_WAIT_TWILL_INPUT) {
+            return;
+        }
+
+        if (result == null) {
+            Log.e(TAG, "TEST_STABLE_FACTOR failed1");
+            saveTestResult(TestResultChecker.TEST_STABLE_FACTOR, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_STABLE_FACTOR, result);
+
+        boolean success = mTestResultChecker.checkStableFactorTestResult(result);
+
+        if (success) {
+            Log.d(TAG, "TEST_STABLE_FACTOR succeed");
+            mIsPrevStablePassed = true;
+            saveTestResult(TestResultChecker.TEST_STABLE_FACTOR, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "TEST_STABLE_FACTOR failed2");
+            saveTestResult(TestResultChecker.TEST_STABLE_FACTOR, TEST_ITEM_STATUS_FAILED);
+        }
+    }
+
+    private void onTestTwillBadpoint(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "onTestTwillBadpoint end");
+
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (result == null) {
+            Log.e(TAG, "TEST_TWILL_BADPOINT failed1");
+            saveTestResult(TestResultChecker.TEST_TWILL_BADPOINT, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_TWILL_BADPOINT, result);
+
+        boolean success = mTestResultChecker.checkTwillBadpointResult(result);
+
+        if (success) {
+            Log.d(TAG, "TEST_TWILL_BADPOINT succeed");
+            saveTestResult(TestResultChecker.TEST_TWILL_BADPOINT, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "TEST_TWILL_BADPOINT failed2");
+            saveTestResult(TestResultChecker.TEST_TWILL_BADPOINT, TEST_ITEM_STATUS_FAILED);
+        }
+    }
+
+    private void onTestSnr(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "TEST_SNR end");
+
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (result == null) {
+            Log.e(TAG, "TEST_SNR failed1");
+            saveTestResult(TestResultChecker.TEST_SNR, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_SNR, result);
+
+        boolean success = mTestResultChecker.checkSnrTestResult(result);
+
+        if (success) {
+            Log.d(TAG, "TEST_SNR succeed");
+            saveTestResult(TestResultChecker.TEST_SNR, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "TEST_SNR failed2");
+            saveTestResult(TestResultChecker.TEST_SNR, TEST_ITEM_STATUS_FAILED);
+        }
     }
 
     public void initView() {
@@ -196,6 +1055,30 @@ public class TouchTestActivity extends Activity {
         mAutoTestingView.setText(R.string.testing);
         mAutoTestingView.setVisibility(View.INVISIBLE);
         mListView.addHeaderView(header);
+    }
+
+    private void getTimeout() {
+        try {
+            Class<?> systemPropertiesClazz = Class.forName("android.os.SystemProperties");
+            Method method = systemPropertiesClazz.getMethod("getLong", new Class[]{
+                    String.class, long.class
+            });
+            mAutoTestTimeout = (Long) method.invoke(null, new Object[]{
+                    Constants.PROPERTY_TEST_ITME_TIMEOUT,
+                    Constants.TEST_TIMEOUT_MS
+            });
+            Log.i(TAG, "getTimeout mAutoTestTimeout = " + mAutoTestTimeout);
+        } catch (ClassNotFoundException e) {
+            Log.e(TAG, "ClassNotFoundException");
+        } catch (NoSuchMethodException e) {
+            Log.e(TAG, "NoSuchMethodException");
+        } catch (IllegalAccessException e) {
+            Log.e(TAG, "IllegalAccessException");
+        } catch (IllegalArgumentException e) {
+            Log.e(TAG, "IllegalArgumentException");
+        } catch (InvocationTargetException e) {
+            Log.e(TAG, "InvocationTargetException");
+        }
     }
 
     @Override
@@ -1196,674 +2079,6 @@ public class TouchTestActivity extends Activity {
         }
     }
 
-    public void getTimeout() {
-        try {
-            Class<?> systemPropertiesClazz = Class.forName("android.os.SystemProperties");
-            Method method = systemPropertiesClazz.getMethod("getLong", new Class[]{
-                    String.class, long.class
-            });
-            mAutoTestTimeout = (Long) method.invoke(null, new Object[]{
-                    Constants.PROPERTY_TEST_ITME_TIMEOUT,
-                    Constants.TEST_TIMEOUT_MS
-            });
-            Log.i(TAG, "getTimeout mAutoTestTimeout = " + mAutoTestTimeout);
-        } catch (ClassNotFoundException e) {
-            Log.e(TAG, "ClassNotFoundException");
-        } catch (NoSuchMethodException e) {
-            Log.e(TAG, "NoSuchMethodException");
-        } catch (IllegalAccessException e) {
-            Log.e(TAG, "IllegalAccessException");
-        } catch (IllegalArgumentException e) {
-            Log.e(TAG, "IllegalArgumentException");
-        } catch (InvocationTargetException e) {
-            Log.e(TAG, "InvocationTargetException");
-        }
-    }
-
-    private void onTestSpi(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "TEST_SPI end");
-
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_PRIOR_CANCEL);
-
-        if (mTestStatus.get(TestResultChecker.TEST_SPI) != TEST_ITEM_STATUS_TESTING) {
-            return;
-        }
-
-        if (result == null) {
-            Log.e(TAG, "TEST_SPI failed1");
-            saveTestResult(TestResultChecker.TEST_SPI, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_SPI, result);
-
-        boolean success = mTestResultChecker.checkSpiTestResult(result);
-
-        if (success) {
-            Log.d(TAG, "TEST_SPI succeed");
-            saveTestResult(TestResultChecker.TEST_SPI, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "TEST_SPI failed2");
-            saveTestResult(TestResultChecker.TEST_SPI, TEST_ITEM_STATUS_FAILED);
-        }
-    }
-
-    private void onTestResetPin(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "TEST_RESET_PIN end");
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (mTestStatus.get(TestResultChecker.TEST_RESET_PIN) != TEST_ITEM_STATUS_TESTING) {
-            return;
-        }
-
-        if (result == null) {
-            Log.e(TAG, "TEST_RESET_PIN failed1");
-            saveTestResult(TestResultChecker.TEST_RESET_PIN, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_RESET_PIN, result);
-
-        boolean success = mTestResultChecker.checkResetPinTestReuslt(result);
-
-        if (success) {
-            Log.d(TAG, "TEST_RESET_PIN succeed");
-            saveTestResult(TestResultChecker.TEST_RESET_PIN, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "TEST_RESET_PIN failed2");
-            saveTestResult(TestResultChecker.TEST_RESET_PIN, TEST_ITEM_STATUS_FAILED);
-        }
-    }
-
-    private void onTestInterruptPin(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "TEST_INTERRUPT_PIN end");
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (mTestStatus.get(TestResultChecker.TEST_INTERRUPT_PIN) != TEST_ITEM_STATUS_TESTING) {
-            return;
-        }
-
-        if (result == null) {
-            Log.e(TAG, "TEST_INTERRUPT_PIN failed1");
-            saveTestResult(TestResultChecker.TEST_INTERRUPT_PIN, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_INTERRUPT_PIN, result);
-
-        boolean success = mTestResultChecker.checkInterruptPinTestReuslt(result);
-
-        if (success) {
-            Log.d(TAG, "TEST_INTERRUPT_PIN succeed");
-            saveTestResult(TestResultChecker.TEST_INTERRUPT_PIN, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "TEST_INTERRUPT_PIN failed2");
-            saveTestResult(TestResultChecker.TEST_INTERRUPT_PIN, TEST_ITEM_STATUS_FAILED);
-        }
-    }
-
-    private void onTestSensor(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "TEST_PIXEL end");
-
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (mTestStatus.get(TestResultChecker.TEST_PIXEL) != TEST_ITEM_STATUS_TESTING) {
-            return;
-        }
-
-        if (result == null) {
-            Log.e(TAG, "TEST_PIXEL failed1");
-            saveTestResult(TestResultChecker.TEST_PIXEL, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_PIXEL, result);
-
-        boolean success = mTestResultChecker.checkPixelTestResult(result);
-
-        if (success) {
-            Log.d(TAG, "TEST_PIXEL succeed");
-            saveTestResult(TestResultChecker.TEST_PIXEL, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "TEST_PIXEL failed2");
-            saveTestResult(TestResultChecker.TEST_PIXEL, TEST_ITEM_STATUS_FAILED);
-        }
-    }
-
-    private void onTestSensorShortStreak(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "TEST_PIXEL_SHORT_STREAK end");
-
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (mTestStatus.get(TestResultChecker.TEST_PIXEL_SHORT_STREAK) != TEST_ITEM_STATUS_TESTING) {
-            return;
-        }
-
-        if (result == null) {
-            Log.e(TAG, "TEST_PIXEL_SHORT_STREAK failed1");
-            saveTestResult(TestResultChecker.TEST_PIXEL_SHORT_STREAK, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_PIXEL_SHORT_STREAK, result);
-
-        boolean success = mTestResultChecker.checkPixelShortStreakTestResult(result);
-
-        if (success) {
-            Log.d(TAG, "TEST_PIXEL_SHORT_STREAK succeed");
-            saveTestResult(TestResultChecker.TEST_PIXEL_SHORT_STREAK, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "TEST_PIXEL_SHORT_STREAK failed2");
-            saveTestResult(TestResultChecker.TEST_PIXEL_SHORT_STREAK, TEST_ITEM_STATUS_FAILED);
-        }
-    }
-
-    private void onTestSensorFine(HashMap<Integer, Object> result) {
-        Log.d(TAG, "onTestSensorFine");
-
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (mTestStatus.get(TestResultChecker.TEST_SENSOR_FINE) != TEST_ITEM_STATUS_TESTING) {
-            return;
-        }
-
-        if (result == null) {
-            Log.e(TAG, "result is null");
-            saveTestResult(TestResultChecker.TEST_SENSOR_FINE, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_SENSOR_FINE, result);
-
-        boolean success = mTestResultChecker.checkSensorFineTestResult(result);
-
-        if (success) {
-            Log.d(TAG, "test sensor fine succeed");
-            saveTestResult(TestResultChecker.TEST_SENSOR_FINE, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "test sensor fine failed");
-            saveTestResult(TestResultChecker.TEST_SENSOR_FINE, TEST_ITEM_STATUS_FAILED);
-        }
-    }
-
-    private void onTestFWVersion(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "TEST_FW_VERSION end");
-
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (mTestStatus.get(TestResultChecker.TEST_FW_VERSION) != TEST_ITEM_STATUS_TESTING) {
-            return;
-        }
-
-        if (result == null) {
-            Log.e(TAG, "TEST_FW_VERSION failed1");
-            saveTestResult(TestResultChecker.TEST_FW_VERSION, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_FW_VERSION, result);
-
-        boolean success = mTestResultChecker.checkFwVersionTestResult(result);
-        if (success) {
-            Log.d(TAG, "TEST_FW_VERSION succeed");
-            saveTestResult(TestResultChecker.TEST_FW_VERSION, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "TEST_FW_VERSION failed2");
-            saveTestResult(TestResultChecker.TEST_FW_VERSION, TEST_ITEM_STATUS_FAILED);
-        }
-    }
-
-    private void onTestBadPoint(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "TEST_BAD_POINT end");
-
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (mTestStatus
-                .get(TestResultChecker.TEST_BAD_POINT) != TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT) {
-            return;
-        }
-
-        if (result == null) {
-            Log.e(TAG, "TEST_BAD_POINT failed1");
-            saveTestResult(TestResultChecker.TEST_BAD_POINT, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_BAD_POINT, result);
-
-        boolean success = mTestResultChecker.checkBadPointTestResult(result);
-
-        if (success) {
-            Log.d(TAG, "TEST_BAD_POINT succeed");
-            saveTestResult(TestResultChecker.TEST_BAD_POINT, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "TEST_BAD_POINT failed2");
-            saveTestResult(TestResultChecker.TEST_BAD_POINT, TEST_ITEM_STATUS_FAILED);
-        }
-    }
-
-    private void onTestPerformance(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "TEST_PERFORMANCE end");
-
-        resetBioAssay();
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (mTestStatus
-                .get(TestResultChecker.TEST_PERFORMANCE) != TEST_ITEM_STATUS_WAIT_FINGER_INPUT) {
-            return;
-        }
-
-        if (result == null) {
-            Log.e(TAG, "TEST_PERFORMANCE failed1");
-            saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_PERFORMANCE, result);
-
-        boolean success = mTestResultChecker.checkPerformanceTestResult(result);
-
-        if (success) {
-            Log.d(TAG, "TEST_PERFORMANCE succeed");
-            saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "TEST_PERFORMANCE failed2");
-            saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_FAILED);
-        }
-        mAdapter.notifyDataSetChanged();
-    }
-
-    private void onTestCapture(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "TEST_CAPTURE end");
-
-        resetBioAssay();
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (mTestStatus.get(TestResultChecker.TEST_CAPTURE) != TEST_ITEM_STATUS_WAIT_FINGER_INPUT) {
-            return;
-        }
-
-        if (result == null) {
-            Log.e(TAG, "TEST_CAPTURE failed1");
-            saveTestResult(TestResultChecker.TEST_CAPTURE, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_CAPTURE, result);
-
-        boolean success = mTestResultChecker.checkCaptureTestResult(result);
-
-        if (success) {
-            Log.d(TAG, "TEST_CAPTURE succeed");
-            saveTestResult(TestResultChecker.TEST_CAPTURE, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "TEST_CAPTURE failed2");
-            saveTestResult(TestResultChecker.TEST_CAPTURE, TEST_ITEM_STATUS_FAILED);
-        }
-        mAdapter.notifyDataSetChanged();
-    }
-
-    private void onTestAlgo(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "TEST_ALGO end");
-
-        resetBioAssay();
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (mTestStatus.get(TestResultChecker.TEST_ALGO) != TEST_ITEM_STATUS_WAIT_FINGER_INPUT) {
-            return;
-        }
-
-        if (result == null) {
-            Log.e(TAG, "TEST_ALGO failed1");
-            saveTestResult(TestResultChecker.TEST_ALGO, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_ALGO, result);
-
-        boolean success = mTestResultChecker.checkAlgoTestResult(result);
-
-        if (success) {
-            Log.d(TAG, "TEST_ALGO succeed");
-            saveTestResult(TestResultChecker.TEST_ALGO, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "TEST_ALGO failed2");
-            saveTestResult(TestResultChecker.TEST_ALGO, TEST_ITEM_STATUS_FAILED);
-        }
-
-        if (mAutoTest) {
-            TestHistoryUtils.addResult("fingerup");
-        }
-
-        mAdapter.notifyDataSetChanged();
-    }
-
-    private void onTestBioCalibrationWithFingerTouch(HashMap<Integer, Object> result) {
-        resetBioAssay();
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (result == null) {
-            Log.e(TAG, "TEST_BIO_CALIBRATION failed1");
-            saveTestResult(TestResultChecker.TEST_BIO_CALIBRATION, TEST_ITEM_STATUS_FAILED);
-            saveTestDetail(TestResultChecker.TEST_BIO_CALIBRATION, mPendingBioDetail);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_BIO_CALIBRATION, mPendingBioDetail, result);
-        mPendingBioDetail = null;
-
-        boolean success = mTestResultChecker.checkBioTestResultWithTouched(result);
-        if (!success) {
-            Log.e(TAG, "TEST_BIO_CALIBRATION step 2 failed1");
-            saveTestResult(TestResultChecker.TEST_BIO_CALIBRATION, TEST_ITEM_STATUS_FAILED);
-        } else {
-            saveTestResult(TestResultChecker.TEST_BIO_CALIBRATION, TEST_ITEM_STATUS_SUCCEED);
-        }
-    }
-
-    private void onTestBioCalibrationWithFingerUntouch(HashMap<Integer, Object> result) {
-        if (result == null) {
-            Log.e(TAG, "TEST_BIO_CALIBRATION failed1");
-            saveTestResult(TestResultChecker.TEST_BIO_CALIBRATION, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        boolean success = mTestResultChecker.checkBioTestResultWithoutTouched(result);
-
-        if (!success) {
-            Log.e(TAG, "TEST_BIO_CALIBRATION step 1 failed1");
-            saveTestResult(TestResultChecker.TEST_BIO_CALIBRATION, TEST_ITEM_STATUS_FAILED);
-            saveTestDetail(TestResultChecker.TEST_BIO_CALIBRATION, result, null);
-        } else {
-            mPendingBioDetail = result;
-            mTestStatus.put(TestResultChecker.TEST_BIO_CALIBRATION,
-                    TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT);
-            mAdapter.notifyDataSetChanged();
-            startCheckFingerDownStatus();
-        }
-        if (mAutoTest) {
-            TestHistoryUtils.addResult("finger down 2");
-        }
-    }
-
-    private void onTestHbdCalibrationStep1(HashMap<Integer, Object> result) {
-        if (result == null) {
-            Log.e(TAG, "TEST_HBD_CALIBRATION failed1");
-            saveTestResult(TestResultChecker.TEST_HBD_CALIBRATION, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        boolean success = mTestResultChecker.checkBioTestResultWithTouched(result);
-
-        if (!success) {
-            Log.e(TAG, "TEST_HBD_CALIBRATION step 1 failed1");
-            saveTestResult(TestResultChecker.TEST_HBD_CALIBRATION, TEST_ITEM_STATUS_FAILED);
-            saveTestDetail(TestResultChecker.TEST_HBD_CALIBRATION, result, null);
-        } else {
-            mPendingBioDetail = result;
-            mAdapter.notifyDataSetChanged();
-            startTestHbdCalibrationStep2();
-        }
-    }
-
-    private void onTestHbdCalibrationStep2(HashMap<Integer, Object> result) {
-        resetBioAssay();
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (result == null) {
-            Log.e(TAG, "TEST_HBD_CALIBRATION failed1");
-            saveTestResult(TestResultChecker.TEST_HBD_CALIBRATION, TEST_ITEM_STATUS_FAILED);
-            saveTestDetail(TestResultChecker.TEST_HBD_CALIBRATION, mPendingBioDetail);
-            return;
-        }
-        Log.d(TAG, "onTestHbdCalibrationStep2 -------------------------------");
-        saveTestDetail(TestResultChecker.TEST_HBD_CALIBRATION, mPendingBioDetail, result);
-        mPendingBioDetail = null;
-
-        if (mAutoTest) {
-            TestHistoryUtils.addResult("fingerup");
-        }
-
-        boolean success = mTestResultChecker.checkHBDTestResultWithTouched(result);
-        if (!success) {
-            Log.e(TAG, "TEST_HBD_CALIBRATION step 2 failed1");
-            saveTestResult(TestResultChecker.TEST_HBD_CALIBRATION, TEST_ITEM_STATUS_FAILED);
-        } else {
-            saveTestResult(TestResultChecker.TEST_HBD_CALIBRATION, TEST_ITEM_STATUS_SUCCEED);
-        }
-    }
-
-    private void onTestRawdataSaturated(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "TEST_RAWDATA_SATURATED end");
-
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (mTestStatus.get(
-                TestResultChecker.TEST_RAWDATA_SATURATED) != TEST_ITEM_STATUS_WAIT_FINGER_INPUT) {
-            return;
-        }
-
-        if (result == null) {
-            Log.e(TAG, "TEST_RAWDATA_SATURATED failed1");
-            saveTestResult(TestResultChecker.TEST_RAWDATA_SATURATED, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_RAWDATA_SATURATED, result);
-
-        boolean success = mTestResultChecker.checkRawdataSaturatedTestResult(result);
-        int underSaturatedPixelCount = 0;
-        int overSaturatedPixelCount = 0;
-        int saturatedPixelThreshold = 0;
-
-        if (success) {
-            if (result.containsKey(TestResultParser.TEST_TOKEN_UNDER_SATURATED_PIXEL_COUNT)) {
-                underSaturatedPixelCount = (Integer) result
-                        .get(TestResultParser.TEST_TOKEN_UNDER_SATURATED_PIXEL_COUNT);
-            }
-            if (result.containsKey(TestResultParser.TEST_TOKEN_OVER_SATURATED_PIXEL_COUNT)) {
-                overSaturatedPixelCount = (Integer) result
-                        .get(TestResultParser.TEST_TOKEN_OVER_SATURATED_PIXEL_COUNT);
-            }
-            if (result.containsKey(TestResultParser.TEST_TOKEN_SATURATED_PIXEL_THRESHOLD)) {
-                saturatedPixelThreshold = (Integer) result
-                        .get(TestResultParser.TEST_TOKEN_SATURATED_PIXEL_THRESHOLD);
-            }
-
-            if (underSaturatedPixelCount > saturatedPixelThreshold
-                    || overSaturatedPixelCount > saturatedPixelThreshold) {
-                Log.e(TAG, "TEST_RAWDATA_CHECK failed2!");
-                saveTestResult(TestResultChecker.TEST_RAWDATA_SATURATED, TEST_ITEM_STATUS_FAILED);
-            } else {
-                Log.e(TAG, "TEST_RAWDATA_CHECK succeed!");
-                saveTestResult(TestResultChecker.TEST_RAWDATA_SATURATED, TEST_ITEM_STATUS_SUCCEED);
-            }
-        } else {
-            Log.e(TAG, "TEST_RAWDATA_CHECK failed3!");
-            saveTestResult(TestResultChecker.TEST_RAWDATA_SATURATED, TEST_ITEM_STATUS_FAILED);
-        }
-        mAdapter.notifyDataSetChanged();
-    }
-
-    private void onTestFpcKeyEnStatus(final HashMap<Integer, Object> result) {
-        int fpcKeyEn = 0;
-        int fpcKeyFailStat = 0;
-        int fpcCanTest = 0;
-        int currentCmd = mAutoTestPosition - 1;
-
-        if ((currentCmd > TEST_ITEM.length) || (currentCmd < 0)) {
-            Log.d(TAG, "[onTestFpcKeyEnStatus] currentCmd out = " + currentCmd);
-            return;
-        }
-
-        if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_FAIL_STATUS)) {
-            fpcKeyFailStat = 0x0FF & (Byte) result.get(TestResultParser.TEST_TOKEN_FPC_KEY_FAIL_STATUS);
-            Log.d(TAG, "test fpcKey fail status: " + fpcKeyFailStat);
-        }
-
-        if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_CAN_TEST)) {
-            fpcCanTest = 0x0FF & (Byte) result.get(TestResultParser.TEST_TOKEN_FPC_KEY_CAN_TEST);
-            Log.d(TAG, "test fpcCanTest: " + fpcCanTest);
-        }
-
-        if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_EN_FLAG)) {
-            fpcKeyEn = 0x0FF & (Byte) result.get(TestResultParser.TEST_TOKEN_FPC_KEY_EN_FLAG);
-            Log.d(TAG, "test fpc key en: " + Integer.toHexString(fpcKeyEn)
-                    + "cmd index=" + currentCmd);
-        }
-
-        if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_RAWDATA)) {
-            byte[] fpcKeyRawData = (byte[]) result.get(TestResultParser.TEST_TOKEN_FPC_KEY_RAWDATA);
-            short rawdata = (short) (fpcKeyRawData[0] & 0x00FF | fpcKeyRawData[1] << 8);
-            Log.d(TAG, "test fpcKeyRawData: " + rawdata);
-            for (int i = 0; i < fpcKeyRawData.length; i++) {
-                Log.d(TAG, " " + Integer.toHexString(0xFF & fpcKeyRawData[i]));
-            }
-        }
-
-        if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_CANCELDATA)) {
-            byte[] fpcKeyCancel = (byte[]) result.get(TestResultParser.TEST_TOKEN_FPC_KEY_CANCELDATA);
-            short canceldata = (short) (fpcKeyCancel[0] & 0x00FF | fpcKeyCancel[1] << 8);
-            Log.d(TAG, "test canceldata: " + canceldata);
-            for (int i = 0; i < fpcKeyCancel.length; i++) {
-                Log.d(TAG, " " + Integer.toHexString(0xFF & fpcKeyCancel[i]));
-            }
-        }
-
-        if (fpcCanTest == 0 || fpcKeyFailStat == 1) {
-            saveTestResultOnly(TEST_ITEM[currentCmd], fpcCanTest == 0 ? TEST_ITEM_STATUS_NO_SUPPORT : TEST_ITEM_STATUS_FAILED);
-            mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_FPC_KEY_RESET_FWCFG, null);
-            mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL, null);
-            mHandler.removeCallbacks(mTimeoutRunnable);
-            autoNextTest();
-        }
-        saveTestDetail(TEST_ITEM[currentCmd], result);
-
-        mAdapter.notifyDataSetChanged();
-    }
-
-    private void onTestFpcKeyEvent(final HashMap<Integer, Object> result) {
-        int event = 0;
-        int status = 0;
-        int currentCmd = mAutoTestPosition - 1;
-        if ((currentCmd > TEST_ITEM.length) || (currentCmd < 0)) {
-            Log.d(TAG, "[onTestFpcKeyEvent] currentCmd out = " + currentCmd);
-            return;
-        }
-
-        if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_EVENT)) {
-            event = (Integer) result.get(TestResultParser.TEST_TOKEN_FPC_KEY_EVENT);
-        }
-        if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_STATUS)) {
-            status = (Integer) result.get(TestResultParser.TEST_TOKEN_FPC_KEY_STATUS);
-        }
-
-        Log.d(TAG, "onTestFpcKey event: " + event + " status: " + status + " currentcmd: "
-                + currentCmd + " test item: " + TEST_ITEM[currentCmd]);
-        if (event == MENU_KEY && TEST_ITEM[currentCmd] == TestResultChecker.TEST_FPC_MENU_KEY) {
-            if (status == KEY_STATUS_DOWN) {
-                saveTestResultOnly(TEST_ITEM[currentCmd], TEST_ITEM_STATUS_SUCCEED);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_FPC_KEY_RESET_FWCFG, null);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL, null);
-                autoNextTest();
-            }
-        } else if (event == BACK_KEY && TEST_ITEM[currentCmd] == TestResultChecker.TEST_FPC_BACK_KEY) {
-            if (status == KEY_STATUS_DOWN) {
-                saveTestResultOnly(TEST_ITEM[currentCmd], TEST_ITEM_STATUS_SUCCEED);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_FPC_KEY_RESET_FWCFG, null);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL, null);
-                autoNextTest();
-            }
-        } else if (event == RING_KEY && TEST_ITEM[currentCmd] == TestResultChecker.TEST_FPC_RING_KEY) {
-            if (status == KEY_STATUS_DOWN) {
-                saveTestResultOnly(TEST_ITEM[currentCmd], TEST_ITEM_STATUS_SUCCEED);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_FPC_KEY_RESET_FWCFG, null);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL, null);
-                autoNextTest();
-            }
-        }
-
-        mAdapter.notifyDataSetChanged();
-    }
-
-    private void onTestStableFactor(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "TEST_STABLE_FACTOR end");
-
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (mTestStatus
-                .get(TestResultChecker.TEST_STABLE_FACTOR) != TEST_ITEM_STATUS_WAIT_TWILL_INPUT) {
-            return;
-        }
-
-        if (result == null) {
-            Log.e(TAG, "TEST_STABLE_FACTOR failed1");
-            saveTestResult(TestResultChecker.TEST_STABLE_FACTOR, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_STABLE_FACTOR, result);
-
-        boolean success = mTestResultChecker.checkStableFactorTestResult(result);
-
-        if (success) {
-            Log.d(TAG, "TEST_STABLE_FACTOR succeed");
-            mIsPrevStablePassed = true;
-            saveTestResult(TestResultChecker.TEST_STABLE_FACTOR, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "TEST_STABLE_FACTOR failed2");
-            saveTestResult(TestResultChecker.TEST_STABLE_FACTOR, TEST_ITEM_STATUS_FAILED);
-        }
-    }
-
-    private void onTestTwillBadpoint(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "onTestTwillBadpoint end");
-
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (result == null) {
-            Log.e(TAG, "TEST_TWILL_BADPOINT failed1");
-            saveTestResult(TestResultChecker.TEST_TWILL_BADPOINT, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_TWILL_BADPOINT, result);
-
-        boolean success = mTestResultChecker.checkTwillBadpointResult(result);
-
-        if (success) {
-            Log.d(TAG, "TEST_TWILL_BADPOINT succeed");
-            saveTestResult(TestResultChecker.TEST_TWILL_BADPOINT, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "TEST_TWILL_BADPOINT failed2");
-            saveTestResult(TestResultChecker.TEST_TWILL_BADPOINT, TEST_ITEM_STATUS_FAILED);
-        }
-    }
-
-    private void onTestSnr(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "TEST_SNR end");
-
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (result == null) {
-            Log.e(TAG, "TEST_SNR failed1");
-            saveTestResult(TestResultChecker.TEST_SNR, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_SNR, result);
-
-        boolean success = mTestResultChecker.checkSnrTestResult(result);
-
-        if (success) {
-            Log.d(TAG, "TEST_SNR succeed");
-            saveTestResult(TestResultChecker.TEST_SNR, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "TEST_SNR failed2");
-            saveTestResult(TestResultChecker.TEST_SNR, TEST_ITEM_STATUS_FAILED);
-        }
-    }
-
     private Runnable mCheckFingerupRunnable = new Runnable() {
         @Override
         public void run() {
@@ -1978,224 +2193,6 @@ public class TouchTestActivity extends Activity {
             stopTest(TEST_ITEM_STATUS_TIMEOUT);
         }
 
-    };
-
-    private TestCmdCallback mTestCmdCallback = new TestCmdCallback() {
-        @Override
-        public void onTestCmd(final int cmdId, final HashMap<Integer, Object> result) {
-            Log.d(TAG, "onTestCmd " + Constants.testCmdIdToString(cmdId));
-
-            if ((result == null || mTestResultChecker == null) && cmdId != Constants.CMD_INIT_CALLBACK) {
-                Log.e(TAG, "GFManager may be wrong");
-                return;
-            }
-
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    switch (cmdId) {
-                        case Constants.CMD_TEST_SPI:
-                            if (mTestStatus.get(TestResultChecker.TEST_SPI) == TEST_ITEM_STATUS_TESTING) {
-                                onTestSpi(result);
-                            } else if (mTestStatus.get(
-                                    TestResultChecker.TEST_FW_VERSION) == TEST_ITEM_STATUS_TESTING) {
-                                onTestFWVersion(result);
-                            }
-                            break;
-
-                        case Constants.CMD_TEST_PIXEL_OPEN:
-                            if (mTestStatus.get(
-                                    TestResultChecker.TEST_PIXEL) == TEST_ITEM_STATUS_TESTING) {
-                                onTestSensor(result);
-                            }
-                            break;
-
-                        case Constants.CMD_TEST_PIXEL_SHORT_STREAK:
-                            if (mTestStatus.get(
-                                    TestResultChecker.TEST_PIXEL_SHORT_STREAK) == TEST_ITEM_STATUS_TESTING) {
-                                onTestSensorShortStreak(result);
-                            }
-                            break;
-
-                        case Constants.CMD_TEST_RESET_PIN:
-                            if (mTestStatus.get(
-                                    TestResultChecker.TEST_RESET_PIN) == TEST_ITEM_STATUS_TESTING) {
-                                onTestResetPin(result);
-                            }
-                            break;
-
-                        case Constants.CMD_TEST_SENSOR_FINE:
-                            if (mTestStatus.get(
-                                    TestResultChecker.TEST_SENSOR_FINE) == TEST_ITEM_STATUS_TESTING) {
-                                onTestSensorFine(result);
-                            }
-                            break;
-
-                        case Constants.CMD_TEST_INTERRUPT_PIN:
-                            if (mTestStatus.get(
-                                    TestResultChecker.TEST_INTERRUPT_PIN) == TEST_ITEM_STATUS_TESTING) {
-                                onTestInterruptPin(result);
-                            }
-                            break;
-
-                        case Constants.CMD_TEST_BAD_POINT:
-                            if (mTestStatus.get(
-                                    TestResultChecker.TEST_BAD_POINT) == TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT) {
-                                onTestBadPoint(result);
-                            }
-                            break;
-                        case Constants.CMD_TEST_PERFORMANCE:
-                            if (mTestStatus.get(
-                                    TestResultChecker.TEST_ALGO) != null && (mTestStatus.get(
-                                    TestResultChecker.TEST_ALGO) == TEST_ITEM_STATUS_WAIT_FINGER_INPUT)) {
-                                onTestAlgo(result);
-                            } else if (mTestStatus.get(
-                                    TestResultChecker.TEST_CAPTURE) != null && (mTestStatus.get(
-                                    TestResultChecker.TEST_CAPTURE) == TEST_ITEM_STATUS_WAIT_FINGER_INPUT)) {
-                                onTestCapture(result);
-                            } else if (mTestStatus.get(
-                                    TestResultChecker.TEST_PERFORMANCE) != null && (mTestStatus.get(
-                                    TestResultChecker.TEST_PERFORMANCE) == TEST_ITEM_STATUS_WAIT_FINGER_INPUT)) {
-                                onTestPerformance(result);
-                            }
-                            break;
-
-                        case Constants.CMD_TEST_SENSOR_VALIDITY:
-                            if (null != mDialog) {
-                                mDialog.cancel();
-                            }
-                            if (result.containsKey(TestResultParser.TEST_TOKEN_SENSOR_VALIDITY)) {
-                                mSensorValidityTestFlag = (Integer) result
-                                        .get(TestResultParser.TEST_TOKEN_SENSOR_VALIDITY);
-                            }
-
-                            mIsSensorValidityTested = true;
-                            if (0 == mSensorValidityTestFlag) {
-                                Log.i(TAG, "Sensor validity test Fail");
-                                new AlertDialog.Builder(TouchTestActivity.this)
-                                        .setTitle(TouchTestActivity.this.getString(R.string.sytem_info))
-                                        .setMessage(TouchTestActivity.this
-                                                .getString(R.string.sensor_validity_test_fail))
-                                        .setPositiveButton(TouchTestActivity.this.getString(R.string.ok),
-                                                new DialogInterface.OnClickListener() {
-                                                    @Override
-                                                    public void onClick(DialogInterface dialog,
-                                                                        int which) {
-                                                        // finish();
-                                                    }
-                                                })
-                                        .show();
-                            } else {
-                                // the trick to update view to gray
-                                mAutoTestingTitleView.setEnabled(true);
-                                mAdapter.notifyDataSetChanged();
-                                Log.i(TAG, "Sensor validity test Pass");
-                            }
-                            break;
-
-                        case Constants.CMD_TEST_BIO_CALIBRATION:
-                            if (mTestStatus.get(
-                                    TestResultChecker.TEST_BIO_CALIBRATION) == TEST_ITEM_STATUS_TESTING) {
-                                // step 1
-                                onTestBioCalibrationWithFingerUntouch(result);
-                            } else if (mTestStatus.get(
-                                    TestResultChecker.TEST_BIO_CALIBRATION) == TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT) {
-                                // step 2
-                                onTestBioCalibrationWithFingerTouch(result);
-                            } else if (mTestStatus.get(
-                                    TestResultChecker.TEST_HBD_CALIBRATION) == TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT) {
-                                onTestHbdCalibrationStep1(result);
-                            }
-                            break;
-                        case Constants.CMD_TEST_HBD_CALIBRATION:
-                            onTestHbdCalibrationStep2(result);
-                            break;
-                        case Constants.CMD_TEST_CHECK_FINGER_EVENT:
-                            if (mTestStatus
-                                    .get(TestResultChecker.TEST_BIO_CALIBRATION) == TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT
-                                    || mTestStatus.get(
-                                    TestResultChecker.TEST_HBD_CALIBRATION) == TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT) {
-                                startTestBioCalibration();
-                            }
-                            break;
-                        case Constants.CMD_TEST_RAWDATA_SATURATED:
-                            if (mTestStatus.get(
-                                    TestResultChecker.TEST_RAWDATA_SATURATED) == TEST_ITEM_STATUS_WAIT_FINGER_INPUT) {
-                                onTestRawdataSaturated(result);
-                            }
-                            break;
-
-                        case Constants.CMD_TEST_FPC_KEY: {
-                            if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_EN_FLAG)) {
-                                onTestFpcKeyEnStatus(result);
-                            } else if (result.containsKey(TestResultParser.TEST_TOKEN_FPC_KEY_EVENT)) {
-                                onTestFpcKeyEvent(result);
-                            }
-                            break;
-                        }
-
-                        case Constants.CMD_TEST_STABLE_FACTOR:
-                            if (mTestStatus.get(
-                                    TestResultChecker.TEST_STABLE_FACTOR) == TEST_ITEM_STATUS_WAIT_TWILL_INPUT) {
-                                onTestStableFactor(result);
-                            }
-                            break;
-
-                        case Constants.CMD_TEST_TWILL_BADPOINT:
-                            onTestTwillBadpoint(result);
-                            break;
-
-                        case Constants.CMD_TEST_NOISE:
-                            onTestSnr(result);
-                            break;
-
-                        case Constants.CMD_INIT_CALLBACK: {
-                            mConfig = mGoodixFingerprintManager.getConfig();
-
-                            Log.i(TAG, "mConfig.mChipSeries = " + mConfig.mChipSeries + "; mConfig.mChipType = " + mConfig.mChipType);
-                            if (null != mConfig && mConfig.mChipType != Constants.GF_CHIP_UNKNOWN) {
-                                mTestResultChecker = TestResultChecker.getInstance().getTestResultCheckerFactory().createCheckerByChip(mConfig.mChipSeries, mConfig.mChipType);
-                                TEST_ITEM = TEST_ITEM_DUBAI_A_SERIES_AUTO;
-                                // set default enrolling min templates
-                                mEnrollmentSteps = mConfig.mEnrollingMinTemplates;
-                                mEnrollmentRemaining = mEnrollmentSteps;
-                            }
-                            initView();
-
-                            // save result to "/data/data/com.goodix.gftest/files/testtool.txt"
-                            TestHistoryUtils.init(getFilesDir().getPath(), "testtool.txt", "testdetail.txt");
-
-
-                            if (null != mConfig && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
-                                    || Constants.GF_MILAN_HV == mConfig.mChipSeries || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES)) {
-                                Log.d(TAG, "TEST_CHECK_SENSOR_TEST_INFO start");
-                                if (mIsSensorValidityTested == false) {
-                                    mSensorValidityTestFlag = 0;
-                                    mAutoTestingTitleView.setEnabled(false);
-                                    mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_SENSOR_VALIDITY);
-                                    mDialog = new ProgressDialog(TouchTestActivity.this);
-                                    mDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                                    mDialog.setCancelable(true);
-                                    mDialog.setCanceledOnTouchOutside(false);
-                                    mDialog.setMessage(TouchTestActivity.this.getString(R.string.sensor_checking));
-                                    mDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                                        @Override
-                                        public void onCancel(DialogInterface dialog) {
-                                        }
-                                    });
-                                    mDialog.show();
-                                }
-                            }
-
-                            //if can't get sensor chip_id ,no need to start runnable
-                            if (TEST_ITEM != null) {
-                                getTimeout();
-                            }
-                        }
-                    }
-                }
-            });
-        }
     };
 
     private Runnable mAutoTestRunnable = new Runnable() {
