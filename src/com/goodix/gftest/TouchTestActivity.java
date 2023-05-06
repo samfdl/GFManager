@@ -4,9 +4,27 @@
  */
 package com.goodix.gftest;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.HashMap;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.graphics.drawable.AnimatedVectorDrawable;
+import android.os.Bundle;
+import android.os.CancellationSignal;
+import android.os.Handler;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.goodix.fingerprint.Constants;
 import com.goodix.fingerprint.GFConfig;
@@ -21,31 +39,11 @@ import com.goodix.gftest.utils.checker.Checker;
 import com.goodix.gftest.utils.checker.TestResultChecker;
 import com.goodix.gftest.widget.HoloCircularProgressBar;
 
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.ProgressDialog;
-import android.content.DialogInterface;
-import android.graphics.drawable.AnimatedVectorDrawable;
-import android.os.Bundle;
-import android.os.CancellationSignal;
-import android.os.Handler;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
 
 public class TouchTestActivity extends Activity {
     private static final String TAG = "TouchTestActivity";
@@ -54,17 +52,6 @@ public class TouchTestActivity extends Activity {
     public static final int MENU_KEY = 3;
     public static final int BACK_KEY = 4;
     public static final int KEY_STATUS_DOWN = 1;
-
-    private final int[] TEST_ITEM_DUBAI_A_SERIES_AUTO = {
-            TestResultChecker.TEST_SPI,
-            TestResultChecker.TEST_RESET_PIN,
-            TestResultChecker.TEST_INTERRUPT_PIN,
-            TestResultChecker.TEST_PIXEL,
-            TestResultChecker.TEST_PERFORMANCE,
-    };
-    private ListView mListView = null;
-    private AlertDialog mCountDownDialog = null;
-    private static int[] TEST_ITEM = null;
 
     private static final int PROGRESS_BAR_MAX = 10000;
 
@@ -83,39 +70,7 @@ public class TouchTestActivity extends Activity {
     private static final int TEST_ITEM_STATUS_WAIT_FINGER_UP = 13;
     private static final int TEST_ITEM_STATUS_WAIT_TWILL_INPUT = 14;
     private static final int TEST_ITEM_STATUS_NO_SUPPORT = 15;
-
-    private HashMap<Integer, Integer> mTestStatus = new HashMap<Integer, Integer>();
-
-    private ProgressDialog mDialog;
-    private Handler mHandler = new Handler();
-    private MyAdapter mAdapter = new MyAdapter();
-
-    private Toast mToast = null;
-
-    private boolean mIsSensorValidityTested = true;
-    private int mSensorValidityTestFlag = 1;
-    private boolean mAutoTest = false;
-    private int mAutoTestPosition = 0;
-    private TextView mAutoTestingView = null;
-    private TextView mAutoTestingTitleView = null;
-    private long mAutoTestTimeout = Constants.TEST_TIMEOUT_MS;
-    private long mMillisStart = 0;
-
-    private long mAutoTestStartTime = 0;
-    private long mAutoTestPrevTestEndTime = 0;
-
-    private GoodixFingerprintManager mGoodixFingerprintManager = null;
-    private GFConfig mConfig = null;
-
-    private int mEnrollmentSteps = 8;
-    private int mEnrollmentRemaining = 8;
     private static final int MAX_FAILED_ATTEMPTS = 3;
-    private int mFailedAttempts = 0;
-
-    private CancellationSignal mEnrollmentCancel = null;
-    private CancellationSignal mAuthenticationCancel = null;
-
-    private HashMap<Integer, Object> mPendingBioDetail = null;
 
     private static final int GF_MILAN_A_SERIES_CFG_LENGTH = 256;
 
@@ -124,6 +79,51 @@ public class TouchTestActivity extends Activity {
     private static final int INVALID_FW_FILE_LEN = 0;
     private static final int INVALID_FW_FILE_DATA = 1;
     private static final int INVALID_CFG_FILE_LEN = 2;
+    private final int[] TEST_ITEM_DUBAI_A_SERIES_AUTO = {
+            TestResultChecker.TEST_SPI,
+            TestResultChecker.TEST_RESET_PIN,
+            TestResultChecker.TEST_INTERRUPT_PIN,
+            TestResultChecker.TEST_PIXEL,
+            TestResultChecker.TEST_PERFORMANCE,
+    };
+
+    private ListView mListView;
+    private MyAdapter mAdapter = new MyAdapter();
+    private TextView mAutoTestingView;
+    private TextView mAutoTestingTitleView;
+    private AlertDialog mCountDownDialog;
+
+    private ProgressDialog mDialog;
+    private Toast mToast;
+    private static int[] TEST_ITEM;
+
+    private HashMap<Integer, Integer> mTestStatus = new HashMap<Integer, Integer>();
+
+    private Handler mHandler = new Handler();
+
+    private boolean mIsSensorValidityTested = true;
+    private int mSensorValidityTestFlag = 1;
+    private boolean mAutoTest = false;
+    private int mAutoTestPosition = 0;
+
+    private long mAutoTestTimeout = Constants.TEST_TIMEOUT_MS;
+    private long mMillisStart = 0;
+
+    private long mAutoTestStartTime = 0;
+    private long mAutoTestPrevTestEndTime = 0;
+
+    private GoodixFingerprintManager mGoodixFingerprintManager;
+    private GFConfig mConfig;
+
+    private int mEnrollmentSteps = 8;
+    private int mEnrollmentRemaining = 8;
+
+    private int mFailedAttempts = 0;
+
+    private CancellationSignal mEnrollmentCancel;
+    private CancellationSignal mAuthenticationCancel;
+
+    private HashMap<Integer, Object> mPendingBioDetail;
 
     private Checker mTestResultChecker;
     private boolean mIsPrevStablePassed = false;
@@ -148,7 +148,7 @@ public class TouchTestActivity extends Activity {
         }
 
         mListView = (ListView) findViewById(R.id.listview);
-        mListView.setOnItemClickListener(new OnItemClickListener() {
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (0 == mSensorValidityTestFlag) {
