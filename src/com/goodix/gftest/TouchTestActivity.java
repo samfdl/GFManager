@@ -1697,7 +1697,7 @@ public class TouchTestActivity extends Activity {
 
         @Override
         public int getItemViewType(int position) {
-            int type = ITEM_VIEW_TYPE_UNTRUSTED_NORMAL;
+            int type;
             switch (TEST_ITEM[position]) {
                 case TestResultChecker.TEST_UNTRUSTED_ENROLL:
                     type = ITEM_VIEW_TYPE_UNTRUSTED_ENROLL;
@@ -1726,20 +1726,20 @@ public class TouchTestActivity extends Activity {
                 holder = new Holder();
                 convertView = LayoutInflater.from(TouchTestActivity.this).inflate(
                         R.layout.item_home, null);
+                holder.titleView = (TextView) convertView.findViewById(R.id.test_title);
+                holder.resultView = (TextView) convertView.findViewById(R.id.test_result);
                 holder.testingViewNormal = (ProgressBar) convertView
                         .findViewById(R.id.testing_normal);
-                holder.testingViewUntrustAuthenticate = (LinearLayout) convertView
-                        .findViewById(R.id.testing_untrust_authenticate);
+                holder.testingViewNormal.setVisibility(View.GONE);
                 holder.testingViewUntrustEnroll = (RelativeLayout) convertView
                         .findViewById(R.id.testing_untrust_enroll);
-                holder.testingViewNormal.setVisibility(View.GONE);
-                holder.testingViewUntrustAuthenticate.setVisibility(View.GONE);
                 holder.testingViewUntrustEnroll.setVisibility(View.VISIBLE);
+                holder.testingViewUntrustAuthenticate = (LinearLayout) convertView
+                        .findViewById(R.id.testing_untrust_authenticate);
+                holder.testingViewUntrustAuthenticate.setVisibility(View.GONE);
                 holder.progressBar = (HoloCircularProgressBar) convertView
                         .findViewById(R.id.fingerprint_progress_bar);
                 holder.progressBar.setMax(PROGRESS_BAR_MAX);
-                holder.titleView = (TextView) convertView.findViewById(R.id.test_title);
-                holder.resultView = (TextView) convertView.findViewById(R.id.test_result);
 
                 switch (type) {
                     case ITEM_VIEW_TYPE_UNTRUSTED_ENROLL: {
