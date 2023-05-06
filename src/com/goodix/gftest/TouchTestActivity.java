@@ -2,7 +2,6 @@
  * Copyright (C) 2013-2016, Shenzhen Huiding Technology Co., Ltd.
  * All Rights Reserved.
  */
-
 package com.goodix.gftest;
 
 import java.lang.reflect.InvocationTargetException;
@@ -11,7 +10,6 @@ import java.util.HashMap;
 
 import com.goodix.fingerprint.Constants;
 import com.goodix.fingerprint.GFConfig;
-import com.goodix.fingerprint.GFErrorCode;
 import com.goodix.fingerprint.service.GoodixFingerprintManager;
 import com.goodix.fingerprint.service.GoodixFingerprintManager.TestCmdCallback;
 import com.goodix.fingerprint.service.GoodixFingerprintManager.UntrustedAuthenticationCallback;
@@ -21,7 +19,6 @@ import com.goodix.fingerprint.utils.TestResultParser;
 import com.goodix.gftest.utils.TestHistoryUtils;
 import com.goodix.gftest.utils.checker.Checker;
 import com.goodix.gftest.utils.checker.TestResultChecker;
-import com.goodix.gftest.utils.checker.TestResultChecker.TestResultCheckerFactory;
 import com.goodix.gftest.widget.HoloCircularProgressBar;
 
 import android.app.Activity;
@@ -30,8 +27,6 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.AnimatedVectorDrawable;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.os.Handler;
@@ -52,18 +47,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.InputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 
 public class TouchTestActivity extends Activity {
-
     private static final String TAG = "TouchTestActivity";
 
     public static final int RING_KEY = 1;
     public static final int MENU_KEY = 3;
     public static final int BACK_KEY = 4;
     public static final int KEY_STATUS_DOWN = 1;
-    public static final int KEY_STATUS_UP = 0;
 
     private ListView mListView = null;
     private Button mDetailBtn = null;
@@ -122,10 +114,8 @@ public class TouchTestActivity extends Activity {
 
     private HashMap<Integer, Object> mPendingBioDetail = null;
 
-    private static final int GF_MILAN_A_SERIES_FW_LENGTH = 5120;
     private static final int GF_MILAN_A_SERIES_CFG_LENGTH = 256;
 
-    private static final int GF_MILAN_AN_SERIES_FW_LENGTH = 6144;
     private static final int GF_MILAN_AN_SERIES_CFG_LENGTH = 418;
 
     private static final int INVALID_FW_FILE_LEN = 0;
@@ -134,12 +124,12 @@ public class TouchTestActivity extends Activity {
 
     private Checker mTestResultChecker;
     private boolean mIsPrevStablePassed = false;
-    private final int[] TEST_ITEM_DUBAI_A_SERIES_AUTO = { //
-            TestResultChecker.TEST_SPI, /**/
-            TestResultChecker.TEST_RESET_PIN, /**/
-            TestResultChecker.TEST_INTERRUPT_PIN, /**/
-            TestResultChecker.TEST_PIXEL, /**/
-            TestResultChecker.TEST_PERFORMANCE, /**/
+    private final int[] TEST_ITEM_DUBAI_A_SERIES_AUTO = {
+            TestResultChecker.TEST_SPI,
+            TestResultChecker.TEST_RESET_PIN,
+            TestResultChecker.TEST_INTERRUPT_PIN,
+            TestResultChecker.TEST_PIXEL,
+            TestResultChecker.TEST_PERFORMANCE,
     };
     private int spiTestR = 0;
     private int resetTestR = 0;
@@ -158,41 +148,7 @@ public class TouchTestActivity extends Activity {
         mGoodixFingerprintManager.registerTestCmdCallback(mTestCmdCallback);
     }
 
-    private void checkHardwareDetected() {
-        boolean isHardwareDetected = true;
-        try {
-            Object fingerprintManager = getSystemService("fingerprint");
-            Method isHardwareDetectedMethod = fingerprintManager.getClass().getMethod(
-                    "isHardwareDetected", new Class[]{});
-            isHardwareDetectedMethod.setAccessible(true);
-            isHardwareDetected = (Boolean) isHardwareDetectedMethod.invoke(fingerprintManager,
-                    new Object[]{});
-        } catch (IllegalAccessException e) {
-        } catch (IllegalArgumentException e) {
-        } catch (InvocationTargetException e) {
-            isHardwareDetected = false;
-        } catch (NoSuchMethodException e) {
-        } catch (Exception e) {
-        }
-
-        Log.i(TAG, "isHardwareDetected = " + isHardwareDetected);
-        if (!isHardwareDetected) {
-            new AlertDialog.Builder(TouchTestActivity.this)
-                    .setTitle(TouchTestActivity.this.getString(R.string.sytem_info))
-                    .setMessage(TouchTestActivity.this.getString(R.string.no_hardware))
-                    .setPositiveButton(TouchTestActivity.this.getString(R.string.ok),
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    finish();
-                                }
-                            })
-                    .show();
-        }
-    }
-
     public void initView() {
-
         if (TEST_ITEM == null) {
             return;
         }
@@ -203,11 +159,8 @@ public class TouchTestActivity extends Activity {
 
         mListView = (ListView) findViewById(R.id.listview);
         mListView.setOnItemClickListener(new OnItemClickListener() {
-
             @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (0 == mSensorValidityTestFlag) {
                     return;
                 }
@@ -236,7 +189,6 @@ public class TouchTestActivity extends Activity {
                 mAutoTestPosition = position;
                 startTest(TEST_ITEM[position - 1]);
             }
-
         });
 
         mListView.setAdapter(mAdapter);
@@ -257,12 +209,8 @@ public class TouchTestActivity extends Activity {
 
         mDetailBtn = (Button) findViewById(R.id.test_detail);
         mDetailBtn.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View view) {
-                //Intent intent = new Intent(TouchTestActivity.this, DetailActivity.class);
-                //intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                //startActivity(intent);
             }
         });
     }
@@ -286,8 +234,6 @@ public class TouchTestActivity extends Activity {
         super.onResume();
         Log.d(TAG, "onResume start");
 
-        //mGoodixFingerprintManager.registerTestCmdCallback(mTestCmdCallback);
-
         if (null != mConfig && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
                 || Constants.GF_MILAN_HV == mConfig.mChipSeries || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES)) {
             Log.d(TAG, "TEST_CHECK_SENSOR_TEST_INFO start");
@@ -303,7 +249,6 @@ public class TouchTestActivity extends Activity {
                 mDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
-
                     }
                 });
                 mDialog.show();
@@ -313,7 +258,6 @@ public class TouchTestActivity extends Activity {
         //if can't get sensor chip_id ,no need to start runnable
         if (TEST_ITEM != null) {
             getTimeout();
-            //mHandler.post(mAutoTestRunnable);
         }
     }
 
@@ -340,7 +284,6 @@ public class TouchTestActivity extends Activity {
 
         if (mGoodixFingerprintManager.hasEnrolledUntrustedFingerprint()) {
             mGoodixFingerprintManager.untrustedRemove(new UntrustedRemovalCallback() {
-
                 @Override
                 public void onRemovalSucceeded(int fingerId) {
                 }
@@ -353,8 +296,6 @@ public class TouchTestActivity extends Activity {
 
         mHandler.removeCallbacks(mTimeoutRunnable);
         mHandler.removeCallbacks(mAutoTestRunnable);
-
-        //mGoodixFingerprintManager.unregisterTestCmdCallback(mTestCmdCallback);
     }
 
     private void startAutoTest() {
@@ -437,15 +378,13 @@ public class TouchTestActivity extends Activity {
         if (testId == TestResultChecker.TEST_BIO_CALIBRATION
                 || testId == TestResultChecker.TEST_HBD_CALIBRATION) {
             TestHistoryUtils.addDetail(testId, result1, result2);
-            TestHistoryUtils
-                    .addDetail("time:" + (System.currentTimeMillis() - mAutoTestPrevTestEndTime)
-                            + "ms");
+            TestHistoryUtils.addDetail("time:" + (System.currentTimeMillis() - mAutoTestPrevTestEndTime)
+                    + "ms");
         }
     }
 
     private void enableBioAssay() {
-        if (mConfig.mChipType == Constants.GF_CHIP_5206
-                || mConfig.mChipType == Constants.GF_CHIP_5208) {
+        if (mConfig.mChipType == Constants.GF_CHIP_5206 || mConfig.mChipType == Constants.GF_CHIP_5208) {
             toggleBioAssay(true);
         }
     }
@@ -497,66 +436,42 @@ public class TouchTestActivity extends Activity {
                     || mTestStatus.get(test_item) == TEST_ITEM_STATUS_WAIT_FINGER_DOWN
                     || mTestStatus.get(test_item) == TEST_ITEM_STATUS_WAIT_FINGER_UP
                     || mTestStatus.get(test_item) == TEST_ITEM_STATUS_WAIT_TWILL_INPUT) {
-
                 switch (test_item) {
                     case TestResultChecker.TEST_SPI:
-                        Log.d(TAG, "TEST_SPI "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
+                        Log.d(TAG, "TEST_SPI " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
-
                     case TestResultChecker.TEST_PIXEL:
-                        Log.d(TAG, "TEST_PIXEL "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
+                        Log.d(TAG, "TEST_PIXEL " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
-
                     case TestResultChecker.TEST_PIXEL_SHORT_STREAK:
-                        Log.d(TAG, "TEST_PIXEL_SHORT_STREAK "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
+                        Log.d(TAG, "TEST_PIXEL_SHORT_STREAK " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
-
                     case TestResultChecker.TEST_RESET_PIN:
-                        Log.d(TAG, "TEST_RESET_PIN "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
+                        Log.d(TAG, "TEST_RESET_PIN " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
-
                     case TestResultChecker.TEST_INTERRUPT_PIN:
-                        Log.d(TAG, "TEST_INTERRUPT_PIN "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
+                        Log.d(TAG, "TEST_INTERRUPT_PIN " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
-
                     case TestResultChecker.TEST_BAD_POINT:
-                        Log.d(TAG, "TEST_BAD_POINT "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
+                        Log.d(TAG, "TEST_BAD_POINT " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
-
                     case TestResultChecker.TEST_PERFORMANCE:
-                        Log.d(TAG, "TEST_PERFORMANCE "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
+                        Log.d(TAG, "TEST_PERFORMANCE " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
-
                     case TestResultChecker.TEST_CAPTURE:
-                        Log.d(TAG, "TEST_CAPTURE "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
+                        Log.d(TAG, "TEST_CAPTURE " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
-
                     case TestResultChecker.TEST_ALGO:
-                        Log.d(TAG, "TEST_ALGO "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
+                        Log.d(TAG, "TEST_ALGO " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
-
                     case TestResultChecker.TEST_BIO_CALIBRATION:
-                        Log.d(TAG, "TEST_BIO_CALIBRATION "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
+                        Log.d(TAG, "TEST_BIO_CALIBRATION " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
-
                     case TestResultChecker.TEST_HBD_CALIBRATION:
-                        Log.d(TAG, "TEST_HBD_CALIBRATION "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
+                        Log.d(TAG, "TEST_HBD_CALIBRATION " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
-
                     case TestResultChecker.TEST_FW_VERSION:
-                        Log.d(TAG, "TEST_FW_VERSION "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
+                        Log.d(TAG, "TEST_FW_VERSION " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
 
                     case TestResultChecker.TEST_RAWDATA_SATURATED:
@@ -656,7 +571,6 @@ public class TouchTestActivity extends Activity {
                     || mTestStatus.get(test_item) == TEST_ITEM_STATUS_ENROLLING
                     || mTestStatus.get(test_item) == TEST_ITEM_STATUS_AUTHENGICATING
                     || mTestStatus.get(test_item) == TEST_ITEM_STATUS_WAIT_TWILL_INPUT) {
-
                 if (mToast != null) {
                     mToast.cancel();
                 }
@@ -734,7 +648,6 @@ public class TouchTestActivity extends Activity {
                 break;
 
             case TestResultChecker.TEST_BIO_CALIBRATION:
-
                 enableBioAssay();
                 mTestStatus.put(TestResultChecker.TEST_BIO_CALIBRATION,
                         TEST_ITEM_STATUS_TESTING);
@@ -866,26 +779,16 @@ public class TouchTestActivity extends Activity {
         mAdapter.notifyDataSetChanged();
         mDetailBtn.setEnabled(false);
 
-        // if (mAutoTest) {
         mHandler.removeCallbacks(mTimeoutRunnable);
         mHandler.postDelayed(mTimeoutRunnable, mAutoTestTimeout);
-        // }
         return true;
     }
 
     private void autoNextTest() {
         if (mAutoTest) {
             boolean canceled = false;
-            boolean timeout = false;
-            boolean failed = false;
             if (mAutoTestPosition > 0) {
                 int status = mTestStatus.get(TEST_ITEM[mAutoTestPosition - 1]);
-                if (status == TEST_ITEM_STATUS_FAILED) {
-                    failed = true;
-                }
-                if (status == TEST_ITEM_STATUS_TIMEOUT) {
-                    timeout = true;
-                }
                 if (status == TEST_ITEM_STATUS_CANCELED) {
                     canceled = true;
                 }
@@ -1195,13 +1098,10 @@ public class TouchTestActivity extends Activity {
                 holder.testingViewNormal.setVisibility(View.GONE);
                 holder.testingViewUntrustEnroll.setVisibility(View.GONE);
                 holder.testingViewUntrustAuthenticate.setVisibility(visibility);
-            } else {
-                /*invalid*/
             }
         }
 
         private void updateTestView(Holder holder, int type, int status) {
-
             switch (status) {
                 case TEST_ITEM_STATUS_IDLE:
                     holder.resultView.setVisibility(View.INVISIBLE);
@@ -1298,7 +1198,6 @@ public class TouchTestActivity extends Activity {
                     holder.resultView.setVisibility(View.VISIBLE);
                     holder.resultView.setText(R.string.wait_finger_down_tip);
                     holder.resultView.setTextColor(getResources().getColor(R.color.fg_color));
-                    //holder.testingView.setVisibility(View.INVISIBLE);
                     updateHolderTestingView(holder, type, View.INVISIBLE);
                     break;
                 }
@@ -1307,23 +1206,20 @@ public class TouchTestActivity extends Activity {
                     holder.resultView.setVisibility(View.VISIBLE);
                     holder.resultView.setText(R.string.wait_finger_up_tip);
                     holder.resultView.setTextColor(getResources().getColor(R.color.fg_color));
-                    //holder.testingView.setVisibility(View.INVISIBLE);
                     updateHolderTestingView(holder, type, View.INVISIBLE);
                     break;
                 }
 
                 case TEST_ITEM_STATUS_NO_SUPPORT: {
                     holder.resultView.setVisibility(View.VISIBLE);
-                    //holder.testingView.setVisibility(View.INVISIBLE);
                     holder.resultView.setText(R.string.test_no_support);
                     holder.resultView.setTextColor(getResources().getColor(R.color.test_succeed_color));
                     updateHolderTestingView(holder, type, View.INVISIBLE);
                     break;
                 }
 
-                default: {
+                default:
                     break;
-                }
             }
         }
 
@@ -1340,7 +1236,6 @@ public class TouchTestActivity extends Activity {
     }
 
     public void getTimeout() {
-
         try {
             Class<?> systemPropertiesClazz = Class.forName("android.os.SystemProperties");
             Method method = systemPropertiesClazz.getMethod("getLong", new Class[]{
@@ -1624,7 +1519,6 @@ public class TouchTestActivity extends Activity {
             Log.e(TAG, "TEST_BAD_POINT failed2");
             saveTestResult(TestResultChecker.TEST_BAD_POINT, TEST_ITEM_STATUS_FAILED);
         }
-
     }
 
     private void onTestPerformance(final HashMap<Integer, Object> result) {
@@ -1727,7 +1621,6 @@ public class TouchTestActivity extends Activity {
     }
 
     private void onTestBioCalibrationWithFingerTouch(HashMap<Integer, Object> result) {
-
         resetBioAssay();
         mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
 
@@ -1796,7 +1689,6 @@ public class TouchTestActivity extends Activity {
     }
 
     private void onTestHbdCalibrationStep2(HashMap<Integer, Object> result) {
-
         resetBioAssay();
         mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
 
@@ -2004,7 +1896,6 @@ public class TouchTestActivity extends Activity {
             Log.e(TAG, "TEST_STABLE_FACTOR failed2");
             saveTestResult(TestResultChecker.TEST_STABLE_FACTOR, TEST_ITEM_STATUS_FAILED);
         }
-
     }
 
     private void onTestTwillBadpoint(final HashMap<Integer, Object> result) {
@@ -2029,7 +1920,6 @@ public class TouchTestActivity extends Activity {
             Log.e(TAG, "TEST_TWILL_BADPOINT failed2");
             saveTestResult(TestResultChecker.TEST_TWILL_BADPOINT, TEST_ITEM_STATUS_FAILED);
         }
-
     }
 
     private void onTestSnr(final HashMap<Integer, Object> result) {
@@ -2054,18 +1944,15 @@ public class TouchTestActivity extends Activity {
             Log.e(TAG, "TEST_SNR failed2");
             saveTestResult(TestResultChecker.TEST_SNR, TEST_ITEM_STATUS_FAILED);
         }
-
     }
 
     private Runnable mCheckFingerupRunnable = new Runnable() {
         @Override
         public void run() {
-
             // get switch finger time as system property
             int switchTime = Constants.AUTO_TEST_BIO_PREPARE_TIME;
             try {
-                switchTime = Integer
-                        .parseInt(getSystemPropertyAsString(Constants.PROPERTY_SWITCH_FINGER_TIME));
+                switchTime = Integer.parseInt(getSystemPropertyAsString(Constants.PROPERTY_SWITCH_FINGER_TIME));
             } catch (Exception e) {
                 Log.e(TAG, e.toString());
             }
@@ -2091,15 +1978,12 @@ public class TouchTestActivity extends Activity {
             } else {
                 mHandler.postDelayed(mCheckFingerupRunnable, 1000);
             }
-
         }
     };
 
     private Runnable mCheckFingerDownRunnable = new Runnable() {
-
         @Override
         public void run() {
-
             String status = getSystemPropertyAsString(Constants.PROPERTY_FINGER_STATUS);
             if (status != null && status.equals("down")) {
                 if (mTestStatus
@@ -2112,18 +1996,15 @@ public class TouchTestActivity extends Activity {
                 Log.d(TAG, "check system properties again");
                 mHandler.postDelayed(mCheckFingerDownRunnable, 500);
             }
-
         }
     };
 
     private void startCountDownForSwitchFinger() {
-
         mCountDownDialog = new AlertDialog.Builder(TouchTestActivity.this)
                 .setTitle(getString(R.string.sytem_info))
                 .setMessage(getString(R.string.test_bio_waiting_start,
                         Constants.AUTO_TEST_BIO_PREPARE_TIME) + "\n"
-                        + getString(R.string.test_bio_no_finger_tips))
-                .create();
+                        + getString(R.string.test_bio_no_finger_tips)).create();
         mCountDownDialog.setCancelable(false);
         mCountDownDialog.show();
         mHandler.post(mCheckFingerupRunnable);
@@ -2174,7 +2055,6 @@ public class TouchTestActivity extends Activity {
     }
 
     private Runnable mTimeoutRunnable = new Runnable() {
-
         @Override
         public void run() {
             stopTest(TEST_ITEM_STATUS_TIMEOUT);
@@ -2183,7 +2063,6 @@ public class TouchTestActivity extends Activity {
     };
 
     private TestCmdCallback mTestCmdCallback = new TestCmdCallback() {
-
         @Override
         public void onTestCmd(final int cmdId, final HashMap<Integer, Object> result) {
             Log.d(TAG, "onTestCmd " + Constants.testCmdIdToString(cmdId));
@@ -2198,8 +2077,7 @@ public class TouchTestActivity extends Activity {
                 public void run() {
                     switch (cmdId) {
                         case Constants.CMD_TEST_SPI:
-                            if (mTestStatus
-                                    .get(TestResultChecker.TEST_SPI) == TEST_ITEM_STATUS_TESTING) {
+                            if (mTestStatus.get(TestResultChecker.TEST_SPI) == TEST_ITEM_STATUS_TESTING) {
                                 onTestSpi(result);
                             } else if (mTestStatus.get(
                                     TestResultChecker.TEST_FW_VERSION) == TEST_ITEM_STATUS_TESTING) {
@@ -2355,12 +2233,10 @@ public class TouchTestActivity extends Activity {
 
                         case Constants.CMD_INIT_CALLBACK: {
                             mConfig = mGoodixFingerprintManager.getConfig();
-                            //checkHardwareDetected();
 
                             Log.i(TAG, "mConfig.mChipSeries = " + mConfig.mChipSeries + "; mConfig.mChipType = " + mConfig.mChipType);
                             if (null != mConfig && mConfig.mChipType != Constants.GF_CHIP_UNKNOWN) {
                                 mTestResultChecker = TestResultChecker.getInstance().getTestResultCheckerFactory().createCheckerByChip(mConfig.mChipSeries, mConfig.mChipType);
-                                //TEST_ITEM = mTestResultChecker.getTestItems(mConfig.mChipType);
                                 TEST_ITEM = TEST_ITEM_DUBAI_A_SERIES_AUTO;
                                 // set default enrolling min templates
                                 mEnrollmentSteps = mConfig.mEnrollingMinTemplates;
@@ -2387,7 +2263,6 @@ public class TouchTestActivity extends Activity {
                                     mDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                                         @Override
                                         public void onCancel(DialogInterface dialog) {
-
                                         }
                                     });
                                     mDialog.show();
@@ -2397,23 +2272,19 @@ public class TouchTestActivity extends Activity {
                             //if can't get sensor chip_id ,no need to start runnable
                             if (TEST_ITEM != null) {
                                 getTimeout();
-                                //mHandler.post(mAutoTestRunnable);
                             }
                         }
                     }
                 }
             });
-
         }
     };
 
     private Runnable mAutoTestRunnable = new Runnable() {
-
         @Override
         public void run() {
             Log.d(TAG, "check system properties");
             String status = "start";
-            //status = getSystemPropertyAsString(Constants.PROPERTY_AUTO_TEST);
             TEST_ITEM = TEST_ITEM_DUBAI_A_SERIES_AUTO;
             if (status != null && status.equals("start")) {
                 mAutoTest = true;
@@ -2424,13 +2295,10 @@ public class TouchTestActivity extends Activity {
                 Log.d(TAG, "check system properties again");
                 mHandler.postDelayed(mAutoTestRunnable, Constants.AUTO_TEST_TIME_INTERVAL);
             }
-
         }
-
     };
 
     private GoodixFingerprintManager.UntrustedEnrollmentCallback mEnrollmentCallback = new GoodixFingerprintManager.UntrustedEnrollmentCallback() {
-
         @Override
         public void onEnrollmentProgress(int fingerId, int remaining) {
             Log.d(TAG,
@@ -2492,8 +2360,6 @@ public class TouchTestActivity extends Activity {
             }
         }
 
-        ;
-
         @Override
         public void onAuthenticationError(int errorCode, CharSequence errString) {
         }
@@ -2514,14 +2380,12 @@ public class TouchTestActivity extends Activity {
             Class<?> systemPropertiesClazz = Class.forName("android.os.SystemProperties");
             Method method = systemPropertiesClazz.getMethod("get", String.class);
             value = (String) method.invoke(null, propertyName);
-
         } catch (ClassNotFoundException e) {
         } catch (NoSuchMethodException e) {
         } catch (IllegalAccessException e) {
         } catch (IllegalArgumentException e) {
         } catch (InvocationTargetException e) {
         }
-
         return value;
     }
 
@@ -2601,14 +2465,8 @@ public class TouchTestActivity extends Activity {
             return;
         }
         Log.d(TAG, "test exit,result = " + getTestR());
-        //mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL, null);
-        //mGoodixFingerprintManager.unregisterTestCmdCallback(mTestCmdCallback);
         Intent intent = new Intent();
         intent.putExtra("TouchTest", getTestR());
         TouchTestActivity.this.setResult(RESULT_OK, intent);
-        //TouchTestActivity.this.finish();
-        //System.exit(0);
     }
-
 }
-
