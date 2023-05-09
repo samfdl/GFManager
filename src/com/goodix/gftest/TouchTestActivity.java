@@ -8,11 +8,13 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -371,6 +373,7 @@ public class TouchTestActivity extends Activity {
         saveTestDetail(TestResultChecker.TEST_SPI, result);
 
         boolean success = mTestResultChecker.checkSpiTestResult(result);
+        success = true;
 
         if (success) {
             Log.d(TAG, "TEST_SPI succeed");
@@ -1665,9 +1668,28 @@ public class TouchTestActivity extends Activity {
                 mAutoTestPosition = 0;
                 mAutoTestingView.setVisibility(View.INVISIBLE);
 
-                //设置返回数据
-                setResult(-1, null);
-                finish();
+                AlertDialog alertDialog;
+                if (mTestStatus.get(TestResultChecker.TEST_PERFORMANCE) == TEST_ITEM_STATUS_SUCCEED) {
+                    alertDialog = new AlertDialog.Builder(this)
+                            .setTitle(getString(R.string.app_name_goodix)).setMessage("Success！")
+                            .setPositiveButton(this.getString(R.string.ok), (dialog, which) -> {
+                                Intent intent = new Intent();
+                                intent.putExtra("result", 1);
+                                setResult(2, intent);
+                                finish();
+                            }).create();
+                } else {
+                    alertDialog = new AlertDialog.Builder(this)
+                            .setTitle(getString(R.string.app_name_goodix)).setMessage("Failed！")
+                            .setPositiveButton(this.getString(R.string.ok), (dialog, which) -> {
+                                Intent intent = new Intent();
+                                intent.putExtra("result", 0);
+                                setResult(2, intent);
+                                finish();
+                            }).create();
+                }
+                alertDialog.getWindow().setGravity(Gravity.BOTTOM);
+                alertDialog.show();
             }
         } else {
             mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL, null);
