@@ -90,6 +90,8 @@ public class TouchTestActivity extends Activity {
             TestResultChecker.TEST_PERFORMANCE,
     };
 
+    private static final int RESULT_CODE = 152;
+
     private ListView mListView;
     private MyAdapter mAdapter = new MyAdapter();
     private TextView mAutoTestingView;
@@ -348,6 +350,7 @@ public class TouchTestActivity extends Activity {
                             if (TEST_ITEM != null) {
                                 getTimeout();
                             }
+                            break;
                         }
                     }
                 }
@@ -1675,7 +1678,7 @@ public class TouchTestActivity extends Activity {
                             .setPositiveButton(this.getString(R.string.ok), (dialog, which) -> {
                                 Intent intent = new Intent();
                                 intent.putExtra("result", 1);
-                                setResult(2, intent);
+                                setResult(RESULT_CODE, intent);
                                 finish();
                             }).create();
                 } else {
@@ -1684,7 +1687,7 @@ public class TouchTestActivity extends Activity {
                             .setPositiveButton(this.getString(R.string.ok), (dialog, which) -> {
                                 Intent intent = new Intent();
                                 intent.putExtra("result", 0);
-                                setResult(2, intent);
+                                setResult(RESULT_CODE, intent);
                                 finish();
                             }).create();
                 }
