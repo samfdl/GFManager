@@ -707,6 +707,141 @@ public class TouchTestActivity extends Activity {
         mListView.addHeaderView(header);
     }
 
+    private void startAutoTest() {
+        Log.d(TAG, "startAutoTest");
+        mAutoTest = true;
+        Log.d(TAG, "startAutoTest mAutoTest = " + mAutoTest);
+
+        TestHistoryUtils.clearHistory();
+        TestHistoryUtils.init(getFilesDir().getPath(), "testtool.txt", "testdetail.txt");
+
+        for (Integer test_item : TEST_ITEM) {
+            mTestStatus.put(test_item, TEST_ITEM_STATUS_IDLE);
+        }
+        mAdapter.notifyDataSetChanged();
+
+        mAutoTestStartTime = System.currentTimeMillis();
+        mAutoTestPrevTestEndTime = mAutoTestStartTime;
+        mAutoTestPosition = 0;
+
+        startTest(TEST_ITEM[mAutoTestPosition]);
+        mAutoTestPosition++;
+        mAutoTestingView.setVisibility(View.VISIBLE);
+    }
+
+    private boolean startTest(int testCmd) {
+        byte[] fpcKeyType = new byte[1];
+        Log.d(TAG, "startTest cmd: " + testCmd);
+        for (Integer test_item : TEST_ITEM) {
+            if (mTestStatus.get(test_item) == TEST_ITEM_STATUS_TESTING
+                    || mTestStatus.get(test_item) == TEST_ITEM_STATUS_WAIT_FINGER_INPUT
+                    || mTestStatus.get(test_item) == TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT
+                    || mTestStatus.get(test_item) == TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT
+                    || mTestStatus.get(test_item) == TEST_ITEM_STATUS_ENROLLING
+                    || mTestStatus.get(test_item) == TEST_ITEM_STATUS_AUTHENGICATING
+                    || mTestStatus.get(test_item) == TEST_ITEM_STATUS_WAIT_TWILL_INPUT) {
+                if (mToast != null) {
+                    mToast.cancel();
+                }
+                mToast = Toast.makeText(TouchTestActivity.this, R.string.busy, Toast.LENGTH_SHORT);
+                mToast.show();
+
+                Log.d(TAG, "startTest " + test_item + " busy");
+                return false;
+            }
+        }
+
+        if (mAutoTestPrevTestEndTime == 0) {
+            mAutoTestStartTime = System.currentTimeMillis();
+        }
+        switch (testCmd) {
+            case TestResultChecker.TEST_SPI:
+                Log.d(TAG, "TEST_SPI start");
+                mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
+                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_SPI);
+                break;
+            case TestResultChecker.TEST_RESET_PIN:
+                Log.d(TAG, "TEST_RESET_PIN start");
+                mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
+                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_RESET_PIN);
+                break;
+            case TestResultChecker.TEST_INTERRUPT_PIN:
+                Log.d(TAG, "TEST_INTERRUPT_PIN start");
+                mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
+                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_INTERRUPT_PIN);
+                break;
+            case TestResultChecker.TEST_PIXEL:
+                Log.d(TAG, "TEST_PIXEL start");
+                mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
+                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_PIXEL_OPEN);
+                break;
+            case TestResultChecker.TEST_BAD_POINT:
+                Log.d(TAG, "TEST_BAD_POINT start");
+                mTestStatus.put(testCmd, TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT);
+                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_BAD_POINT);
+                break;
+            case TestResultChecker.TEST_CAPTURE:
+                Log.d(TAG, "TEST_CAPTURE start");
+                disableBioAssay();
+                mTestStatus.put(testCmd, TEST_ITEM_STATUS_WAIT_FINGER_INPUT);
+                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_PERFORMANCE);
+                break;
+            case TestResultChecker.TEST_ALGO:
+                Log.d(TAG, "TEST_ALGO start");
+                disableBioAssay();
+                mTestStatus.put(testCmd, TEST_ITEM_STATUS_WAIT_FINGER_INPUT);
+                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_PERFORMANCE);
+                break;
+            case TestResultChecker.TEST_FW_VERSION:
+                Log.d(TAG, "TEST_FW_VERSION start");
+                mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
+                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_SPI);
+                break;
+            case TestResultChecker.TEST_PIXEL_SHORT_STREAK:
+                Log.d(TAG, "TEST_PIXEL_SHORT_STREAK start");
+                mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
+                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_PIXEL_SHORT_STREAK);
+                break;
+            case TestResultChecker.TEST_PERFORMANCE:
+                if (mAutoTest) {
+                    TestHistoryUtils.addResult("fingerdown 0");
+                }
+                Log.d(TAG, "TEST_PERFORMANCE start");
+                disableBioAssay();
+                mTestStatus.put(testCmd, TEST_ITEM_STATUS_WAIT_FINGER_INPUT);
+                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_PERFORMANCE);
+                break;
+
+            case TestResultChecker.TEST_UNTRUSTED_AUTHENTICATE: {
+                Log.d(TAG, "TEST_UNTRUSTED_AUTHENTICATE start");
+                if (mGoodixFingerprintManager.hasEnrolledUntrustedFingerprint()) {
+                    mTestStatus.put(testCmd, TEST_ITEM_STATUS_AUTHENGICATING);
+                    mAuthenticationCancel = new CancellationSignal();
+                    mGoodixFingerprintManager.untrustedAuthenticate(mAuthenticationCancel,
+                            mAuthCallback);
+                    mFailedAttempts = 0;
+                } else {
+                    if (!mAutoTest) {
+                        if (mToast != null) {
+                            mToast.cancel();
+                        }
+                        mToast = Toast.makeText(TouchTestActivity.this, R.string.not_enrolled,
+                                Toast.LENGTH_SHORT);
+                        mToast.show();
+                        return false;
+                    }
+                }
+                break;
+            }
+        }
+
+        mAdapter.notifyDataSetChanged();
+
+        mHandler.removeCallbacks(mTimeoutRunnable);
+        mHandler.postDelayed(mTimeoutRunnable, mAutoTestTimeout);
+        return true;
+    }
+
     private void getTimeout() {
         try {
             Class<?> systemPropertiesClazz = Class.forName("android.os.SystemProperties");
@@ -1097,28 +1232,6 @@ public class TouchTestActivity extends Activity {
         mGoodixFingerprintManager.unregisterTestCmdCallback(mTestCmdCallback);
     }
 
-    private void startAutoTest() {
-        Log.d(TAG, "startAutoTest");
-        mAutoTest = true;
-        Log.d(TAG, "startAutoTest mAutoTest = " + mAutoTest);
-
-        TestHistoryUtils.clearHistory();
-        TestHistoryUtils.init(getFilesDir().getPath(), "testtool.txt", "testdetail.txt");
-
-        for (Integer test_item : TEST_ITEM) {
-            mTestStatus.put(test_item, TEST_ITEM_STATUS_IDLE);
-        }
-        mAdapter.notifyDataSetChanged();
-
-        mAutoTestStartTime = System.currentTimeMillis();
-        mAutoTestPrevTestEndTime = mAutoTestStartTime;
-        mAutoTestPosition = 0;
-
-        startTest(TEST_ITEM[mAutoTestPosition]);
-        mAutoTestPosition++;
-        mAutoTestingView.setVisibility(View.VISIBLE);
-    }
-
     private void saveTestResult(int testId, int reason) {
         mTestStatus.put(testId, reason);
         if (reason == TEST_ITEM_STATUS_TIMEOUT) {
@@ -1335,229 +1448,6 @@ public class TouchTestActivity extends Activity {
                 break;
             }
         }
-    }
-
-    private boolean startTest(int testCmd) {
-        byte[] fpcKeyType = new byte[1];
-        Log.d(TAG, "startTest cmd: " + testCmd);
-        for (Integer test_item : TEST_ITEM) {
-            if (mTestStatus.get(test_item) == TEST_ITEM_STATUS_TESTING
-                    || mTestStatus.get(test_item) == TEST_ITEM_STATUS_WAIT_FINGER_INPUT
-                    || mTestStatus.get(test_item) == TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT
-                    || mTestStatus.get(test_item) == TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT
-                    || mTestStatus.get(test_item) == TEST_ITEM_STATUS_ENROLLING
-                    || mTestStatus.get(test_item) == TEST_ITEM_STATUS_AUTHENGICATING
-                    || mTestStatus.get(test_item) == TEST_ITEM_STATUS_WAIT_TWILL_INPUT) {
-                if (mToast != null) {
-                    mToast.cancel();
-                }
-                mToast = Toast.makeText(TouchTestActivity.this, R.string.busy, Toast.LENGTH_SHORT);
-                mToast.show();
-
-                Log.d(TAG, "startTest " + test_item + " busy");
-                return false;
-            }
-        }
-
-        if (mAutoTestPrevTestEndTime == 0) {
-            mAutoTestStartTime = System.currentTimeMillis();
-        }
-        switch (testCmd) {
-            case TestResultChecker.TEST_SPI:
-                Log.d(TAG, "TEST_SPI start");
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_SPI);
-                break;
-
-            case TestResultChecker.TEST_PIXEL:
-                Log.d(TAG, "TEST_PIXEL start");
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_PIXEL_OPEN);
-                break;
-
-            case TestResultChecker.TEST_PIXEL_SHORT_STREAK:
-                Log.d(TAG, "TEST_PIXEL_SHORT_STREAK start");
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_PIXEL_SHORT_STREAK);
-                break;
-
-            case TestResultChecker.TEST_RESET_PIN:
-                Log.d(TAG, "TEST_RESET_PIN start");
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_RESET_PIN);
-                break;
-
-            case TestResultChecker.TEST_INTERRUPT_PIN:
-                Log.d(TAG, "TEST_INTERRUPT_PIN start");
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_INTERRUPT_PIN);
-                break;
-
-            case TestResultChecker.TEST_BAD_POINT:
-                Log.d(TAG, "TEST_BAD_POINT start");
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_BAD_POINT);
-                break;
-
-            case TestResultChecker.TEST_PERFORMANCE:
-                if (mAutoTest) {
-                    TestHistoryUtils.addResult("fingerdown 0");
-                }
-
-                Log.d(TAG, "TEST_PERFORMANCE start");
-                disableBioAssay();
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_WAIT_FINGER_INPUT);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_PERFORMANCE);
-                break;
-
-            case TestResultChecker.TEST_CAPTURE:
-                Log.d(TAG, "TEST_CAPTURE start");
-                disableBioAssay();
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_WAIT_FINGER_INPUT);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_PERFORMANCE);
-                break;
-
-            case TestResultChecker.TEST_ALGO:
-                Log.d(TAG, "TEST_ALGO start");
-                disableBioAssay();
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_WAIT_FINGER_INPUT);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_PERFORMANCE);
-                break;
-
-            case TestResultChecker.TEST_BIO_CALIBRATION:
-                enableBioAssay();
-                mTestStatus.put(TestResultChecker.TEST_BIO_CALIBRATION,
-                        TEST_ITEM_STATUS_TESTING);
-                mAdapter.notifyDataSetChanged();
-                if (mTestResultChecker.getTestItemsByStatus(1) == TEST_ITEM) {
-                    startCountDownForSwitchFinger();
-                } else {
-                    startTestBioCalibration();
-                }
-                break;
-
-            case TestResultChecker.TEST_HBD_CALIBRATION:
-
-                enableBioAssay();
-                mTestStatus.put(TestResultChecker.TEST_HBD_CALIBRATION,
-                        TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT);
-                startCheckFingerDownStatus();
-                break;
-            case TestResultChecker.TEST_FW_VERSION:
-                Log.d(TAG, "TEST_FW_VERSION start");
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_SPI);
-                break;
-
-            case TestResultChecker.TEST_RAWDATA_SATURATED:
-                Log.d(TAG, "TEST_RAWDATA_SATURATED start");
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_WAIT_FINGER_INPUT);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_RAWDATA_SATURATED);
-                break;
-
-            case TestResultChecker.TEST_UNTRUSTED_ENROLL:
-                Log.d(TAG, "TEST_UNTRUSTED_ENROLL start");
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_ENROLLING);
-                mEnrollmentCancel = new CancellationSignal();
-                mGoodixFingerprintManager.untrustedEnroll(mEnrollmentCancel, mEnrollmentCallback);
-                mEnrollmentRemaining = mEnrollmentSteps;
-                break;
-
-            case TestResultChecker.TEST_UNTRUSTED_AUTHENTICATE: {
-                Log.d(TAG, "TEST_UNTRUSTED_AUTHENTICATE start");
-                if (mGoodixFingerprintManager.hasEnrolledUntrustedFingerprint()) {
-                    mTestStatus.put(testCmd, TEST_ITEM_STATUS_AUTHENGICATING);
-                    mAuthenticationCancel = new CancellationSignal();
-                    mGoodixFingerprintManager.untrustedAuthenticate(mAuthenticationCancel,
-                            mAuthCallback);
-                    mFailedAttempts = 0;
-                } else {
-                    if (!mAutoTest) {
-                        if (mToast != null) {
-                            mToast.cancel();
-                        }
-                        mToast = Toast.makeText(TouchTestActivity.this, R.string.not_enrolled,
-                                Toast.LENGTH_SHORT);
-                        mToast.show();
-                        return false;
-                    }
-                }
-                break;
-            }
-
-            case TestResultChecker.TEST_SENSOR_FINE:
-                Log.d(TAG, "TEST_SENSOR_FINE start");
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_SENSOR_FINE);
-                break;
-
-            case TestResultChecker.TEST_FPC_MENU_KEY:
-                fpcKeyType[0] = 0x01;
-                downLoadCfgForFPCKey();
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_FPC_KEY, fpcKeyType);
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_WAIT_FINGER_DOWN);
-                break;
-
-            case TestResultChecker.TEST_FPC_BACK_KEY:
-                fpcKeyType[0] = 0x02;
-                downLoadCfgForFPCKey();
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_FPC_KEY, fpcKeyType);
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_WAIT_FINGER_DOWN);
-                break;
-
-            case TestResultChecker.TEST_FPC_RING_KEY:
-                fpcKeyType[0] = 0x04;
-                downLoadCfgForFPCKey();
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_FPC_KEY, fpcKeyType);
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_WAIT_FINGER_DOWN);
-                break;
-
-            case TestResultChecker.TEST_STABLE_FACTOR:
-                Log.d(TAG, "TEST_STABLE_FACTOR start");
-                mIsPrevStablePassed = false;
-                mTestStatus.put(testCmd, TEST_ITEM_STATUS_WAIT_TWILL_INPUT);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_STABLE_FACTOR);
-                break;
-
-            case TestResultChecker.TEST_TWILL_BADPOINT:
-                Log.d(TAG, "TEST_TWILL_BADPOINT start");
-                if (mIsPrevStablePassed == true) {
-                    mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
-                    mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_TWILL_BADPOINT);
-                } else {
-                    if (mToast != null) {
-                        mToast.cancel();
-                    }
-                    mToast = Toast.makeText(TouchTestActivity.this, R.string.stable_factor_first,
-                            Toast.LENGTH_SHORT);
-                    mToast.show();
-                    return false;
-                }
-                break;
-
-            case TestResultChecker.TEST_SNR:
-                Log.d(TAG, "TEST_SNR start");
-                if (mIsPrevStablePassed == true) {
-                    mTestStatus.put(testCmd, TEST_ITEM_STATUS_TESTING);
-                    mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_NOISE);
-                } else {
-                    if (mToast != null) {
-                        mToast.cancel();
-                    }
-                    mToast = Toast.makeText(TouchTestActivity.this, R.string.stable_factor_first,
-                            Toast.LENGTH_SHORT);
-                    mToast.show();
-                    return false;
-                }
-                break;
-
-        }
-
-        mAdapter.notifyDataSetChanged();
-
-        mHandler.removeCallbacks(mTimeoutRunnable);
-        mHandler.postDelayed(mTimeoutRunnable, mAutoTestTimeout);
-        return true;
     }
 
     private void autoNextTest() {
