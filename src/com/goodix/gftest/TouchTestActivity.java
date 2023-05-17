@@ -811,30 +811,7 @@ public class TouchTestActivity extends Activity {
                 mTestStatus.put(testCmd, TEST_ITEM_STATUS_WAIT_FINGER_INPUT);
                 mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_PERFORMANCE);
                 break;
-
-            case TestResultChecker.TEST_UNTRUSTED_AUTHENTICATE: {
-                Log.d(TAG, "TEST_UNTRUSTED_AUTHENTICATE start");
-                if (mGoodixFingerprintManager.hasEnrolledUntrustedFingerprint()) {
-                    mTestStatus.put(testCmd, TEST_ITEM_STATUS_AUTHENGICATING);
-                    mAuthenticationCancel = new CancellationSignal();
-                    mGoodixFingerprintManager.untrustedAuthenticate(mAuthenticationCancel,
-                            mAuthCallback);
-                    mFailedAttempts = 0;
-                } else {
-                    if (!mAutoTest) {
-                        if (mToast != null) {
-                            mToast.cancel();
-                        }
-                        mToast = Toast.makeText(TouchTestActivity.this, R.string.not_enrolled,
-                                Toast.LENGTH_SHORT);
-                        mToast.show();
-                        return false;
-                    }
-                }
-                break;
-            }
         }
-
         mAdapter.notifyDataSetChanged();
 
         mHandler.removeCallbacks(mTimeoutRunnable);
@@ -1036,6 +1013,36 @@ public class TouchTestActivity extends Activity {
         mAdapter.notifyDataSetChanged();
     }
 
+    private void resetBioAssay() {
+        Log.d(TAG, "support bio assay : " + mConfig.mSupportBioAssay);
+        if (mConfig.mSupportBioAssay == 0) {
+            disableBioAssay();
+        } else {
+            if (mConfig.mChipType == Constants.GF_CHIP_5206 || mConfig.mChipType == Constants.GF_CHIP_5208) {
+                toggleBioAssay(true);
+            }
+        }
+    }
+
+    private void disableBioAssay() {
+        if (mConfig.mChipType == Constants.GF_CHIP_5206 || mConfig.mChipType == Constants.GF_CHIP_5208) {
+            toggleBioAssay(false);
+        }
+    }
+
+    private void toggleBioAssay(boolean enabled) {
+        byte[] byteArray = new byte[TestParamEncoder.TEST_ENCODE_SIZEOF_INT32];
+        int offset = 0;
+        int value = 0;
+
+        if (true == enabled) {
+            value = 1;
+        }
+
+        TestParamEncoder.encodeInt32(byteArray, offset, TestResultParser.TEST_TOKEN_SUPPORT_BIO_ASSAY, value);
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_SET_CONFIG, byteArray);
+    }
+
     private void onTestAlgo(final HashMap<Integer, Object> result) {
         Log.d(TAG, "TEST_ALGO end");
 
@@ -1226,88 +1233,6 @@ public class TouchTestActivity extends Activity {
         mHandler.removeCallbacks(mAutoTestRunnable);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mGoodixFingerprintManager.unregisterTestCmdCallback(mTestCmdCallback);
-    }
-
-    private void saveTestResult(int testId, int reason) {
-        mTestStatus.put(testId, reason);
-        if (reason == TEST_ITEM_STATUS_TIMEOUT) {
-            TestHistoryUtils.addResult(testId, "result=TIMEOUT");
-        } else if (reason == TEST_ITEM_STATUS_CANCELED) {
-            TestHistoryUtils.addResult(testId, "result=CANCELED");
-        } else if (reason == TEST_ITEM_STATUS_FAILED) {
-            TestHistoryUtils.addResult(testId, "result=FAILED");
-        } else if (reason == TEST_ITEM_STATUS_SUCCEED) {
-            TestHistoryUtils.addResult(testId, "result=SUCCEED");
-        } else if (reason == TEST_ITEM_STATUS_NO_SUPPORT) {
-            TestHistoryUtils.addResult(testId, "result=NO SUPPORT");
-        }
-
-        mAdapter.notifyDataSetChanged();
-        mHandler.removeCallbacks(mTimeoutRunnable);
-        autoNextTest();
-    }
-
-    private void saveTestResultOnly(int testId, int reason) {
-        mTestStatus.put(testId, reason);
-        if (reason == TEST_ITEM_STATUS_TIMEOUT) {
-            TestHistoryUtils.addResult(testId, "result=TIMEOUT");
-        } else if (reason == TEST_ITEM_STATUS_CANCELED) {
-            TestHistoryUtils.addResult(testId, "result=CANCELED");
-        } else if (reason == TEST_ITEM_STATUS_FAILED) {
-            TestHistoryUtils.addResult(testId, "result=FAILED");
-        } else if (reason == TEST_ITEM_STATUS_SUCCEED) {
-            TestHistoryUtils.addResult(testId, "result=SUCCEED");
-        } else if (reason == TEST_ITEM_STATUS_NO_SUPPORT) {
-            TestHistoryUtils.addResult(testId, "result=NO SUPPORT");
-        }
-    }
-
-    private void saveTestDetail(int testId, HashMap<Integer, Object> result) {
-        TestHistoryUtils.addDetail(testId, result);
-        TestHistoryUtils.addDetail("time:"
-                + (System.currentTimeMillis() - mAutoTestPrevTestEndTime)
-                + "ms");
-    }
-
-    private void enableBioAssay() {
-        if (mConfig.mChipType == Constants.GF_CHIP_5206 || mConfig.mChipType == Constants.GF_CHIP_5208) {
-            toggleBioAssay(true);
-        }
-    }
-
-    private void disableBioAssay() {
-        if (mConfig.mChipType == Constants.GF_CHIP_5206
-                || mConfig.mChipType == Constants.GF_CHIP_5208) {
-            toggleBioAssay(false);
-        }
-    }
-
-    private void resetBioAssay() {
-        Log.d(TAG, "support bio assay : " + mConfig.mSupportBioAssay);
-        if (mConfig.mSupportBioAssay == 0) {
-            disableBioAssay();
-        } else {
-            enableBioAssay();
-        }
-    }
-
-    private void toggleBioAssay(boolean enabled) {
-        byte[] byteArray = new byte[TestParamEncoder.TEST_ENCODE_SIZEOF_INT32];
-        int offset = 0;
-        int value = 0;
-
-        if (true == enabled) {
-            value = 1;
-        }
-
-        TestParamEncoder.encodeInt32(byteArray, offset, TestResultParser.TEST_TOKEN_SUPPORT_BIO_ASSAY, value);
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_SET_CONFIG, byteArray);
-    }
-
     private void stopTest(int reason) {
         Log.d(TAG, "stopTest reason: " + reason);
 
@@ -1450,6 +1375,53 @@ public class TouchTestActivity extends Activity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mGoodixFingerprintManager.unregisterTestCmdCallback(mTestCmdCallback);
+    }
+
+    private void saveTestResult(int testId, int reason) {
+        mTestStatus.put(testId, reason);
+        if (reason == TEST_ITEM_STATUS_TIMEOUT) {
+            TestHistoryUtils.addResult(testId, "result=TIMEOUT");
+        } else if (reason == TEST_ITEM_STATUS_CANCELED) {
+            TestHistoryUtils.addResult(testId, "result=CANCELED");
+        } else if (reason == TEST_ITEM_STATUS_FAILED) {
+            TestHistoryUtils.addResult(testId, "result=FAILED");
+        } else if (reason == TEST_ITEM_STATUS_SUCCEED) {
+            TestHistoryUtils.addResult(testId, "result=SUCCEED");
+        } else if (reason == TEST_ITEM_STATUS_NO_SUPPORT) {
+            TestHistoryUtils.addResult(testId, "result=NO SUPPORT");
+        }
+
+        mAdapter.notifyDataSetChanged();
+        mHandler.removeCallbacks(mTimeoutRunnable);
+        autoNextTest();
+    }
+
+    private void saveTestResultOnly(int testId, int reason) {
+        mTestStatus.put(testId, reason);
+        if (reason == TEST_ITEM_STATUS_TIMEOUT) {
+            TestHistoryUtils.addResult(testId, "result=TIMEOUT");
+        } else if (reason == TEST_ITEM_STATUS_CANCELED) {
+            TestHistoryUtils.addResult(testId, "result=CANCELED");
+        } else if (reason == TEST_ITEM_STATUS_FAILED) {
+            TestHistoryUtils.addResult(testId, "result=FAILED");
+        } else if (reason == TEST_ITEM_STATUS_SUCCEED) {
+            TestHistoryUtils.addResult(testId, "result=SUCCEED");
+        } else if (reason == TEST_ITEM_STATUS_NO_SUPPORT) {
+            TestHistoryUtils.addResult(testId, "result=NO SUPPORT");
+        }
+    }
+
+    private void saveTestDetail(int testId, HashMap<Integer, Object> result) {
+        TestHistoryUtils.addDetail(testId, result);
+        TestHistoryUtils.addDetail("time:"
+                + (System.currentTimeMillis() - mAutoTestPrevTestEndTime)
+                + "ms");
+    }
+
     private void autoNextTest() {
         if (mAutoTest) {
             boolean canceled = false;
@@ -1566,27 +1538,11 @@ public class TouchTestActivity extends Activity {
         }
     };
 
-    private void startCountDownForSwitchFinger() {
-        mCountDownDialog = new AlertDialog.Builder(TouchTestActivity.this)
-                .setTitle(getString(R.string.sytem_info))
-                .setMessage(getString(R.string.test_bio_waiting_start,
-                        Constants.AUTO_TEST_BIO_PREPARE_TIME) + "\n"
-                        + getString(R.string.test_bio_no_finger_tips)).create();
-        mCountDownDialog.setCancelable(false);
-        mCountDownDialog.show();
-        mHandler.post(mCheckFingerupRunnable);
-    }
-
     private void stopCountDownForSwitchFinger() {
         if (mCountDownDialog != null) {
             mCountDownDialog.dismiss();
         }
         mHandler.removeCallbacks(mCheckFingerupRunnable);
-    }
-
-    private void startCheckFingerDownStatus() {
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CHECK_FINGER_EVENT);
-        mHandler.post(mCheckFingerDownRunnable);
     }
 
     private void startTestBioCalibration() {
@@ -1637,81 +1593,6 @@ public class TouchTestActivity extends Activity {
         }
     };
 
-    private GoodixFingerprintManager.UntrustedEnrollmentCallback mEnrollmentCallback = new GoodixFingerprintManager.UntrustedEnrollmentCallback() {
-        @Override
-        public void onEnrollmentProgress(int fingerId, int remaining) {
-            Log.d(TAG,
-                    "onEnrollmentProgress fingerId = " + fingerId + ", remaining = " + remaining);
-            mEnrollmentRemaining = remaining;
-            mTestStatus.put(TestResultChecker.TEST_UNTRUSTED_ENROLL, TEST_ITEM_STATUS_ENROLLING);
-            mAdapter.notifyDataSetChanged();
-
-            if (mConfig.mEnrollingMinTemplates - remaining >= mEnrollmentSteps) {
-                mEnrollmentCancel = null;
-                saveTestResult(TestResultChecker.TEST_UNTRUSTED_ENROLL, TEST_ITEM_STATUS_SUCCEED);
-                saveTestDetail(TestResultChecker.TEST_SPI, null);
-            }
-        }
-
-        @Override
-        public void onEnrollmentHelp(int helpMsgId, CharSequence helpString) {
-            Log.d(TAG, "onEnrollmentHelp helpMsgId = " + helpMsgId);
-        }
-
-        @Override
-        public void onEnrollmentError(int errMsgId, CharSequence errString) {
-            Log.d(TAG, "onEnrollmentError errMsgId = " + errMsgId);
-
-            mTestStatus.put(TestResultChecker.TEST_UNTRUSTED_ENROLL, TEST_ITEM_STATUS_FAILED);
-            mAdapter.notifyDataSetChanged();
-            mHandler.removeCallbacks(mTimeoutRunnable);
-
-            autoNextTest();
-        }
-
-        @Override
-        public void onEnrollmentAcquired(int acquireInfo) {
-            Log.d(TAG, "onEnrollmentAcquired acquireInfo = " + acquireInfo);
-        }
-    };
-
-    private UntrustedAuthenticationCallback mAuthCallback = new UntrustedAuthenticationCallback() {
-        @Override
-        public void onAuthenticationSucceeded(int fingerId) {
-            mAuthenticationCancel = null;
-            saveTestResult(TestResultChecker.TEST_UNTRUSTED_AUTHENTICATE, TEST_ITEM_STATUS_SUCCEED);
-            saveTestDetail(TestResultChecker.TEST_SPI, null);
-        }
-
-        @Override
-        public void onAuthenticationFailed() {
-            mFailedAttempts++;
-            if (mFailedAttempts >= MAX_FAILED_ATTEMPTS) {
-                mAuthenticationCancel.cancel();
-                mAuthenticationCancel = null;
-                saveTestResult(TestResultChecker.TEST_UNTRUSTED_AUTHENTICATE,
-                        TEST_ITEM_STATUS_FAILED);
-                saveTestDetail(TestResultChecker.TEST_SPI, null);
-            } else {
-                mTestStatus.put(TestResultChecker.TEST_UNTRUSTED_AUTHENTICATE,
-                        TEST_ITEM_STATUS_AUTHENGICATING);
-                mAdapter.notifyDataSetChanged();
-            }
-        }
-
-        @Override
-        public void onAuthenticationError(int errorCode, CharSequence errString) {
-        }
-
-        @Override
-        public void onAuthenticationHelp(int helpCode, CharSequence helpString) {
-        }
-
-        @Override
-        public void onAuthenticationAcquired(int acquireInfo) {
-        }
-    };
-
     private String getSystemPropertyAsString(String propertyName) {
         String value = null;
 
@@ -1726,75 +1607,5 @@ public class TouchTestActivity extends Activity {
         } catch (InvocationTargetException e) {
         }
         return value;
-    }
-
-    private void downLoadCfgForFPCKey() {
-        byte[] cfgData = readFwCfgFile("GF5236_FpcEn.cfg");
-        if (null == cfgData) {
-            Log.e(TAG, "fail to read FW cfg file");
-            return;
-        }
-        if (cfgData.length != GF_MILAN_A_SERIES_CFG_LENGTH && cfgData.length != GF_MILAN_AN_SERIES_CFG_LENGTH) {
-            Log.e(TAG, "invalid cfg file, length err, len " + cfgData.length);
-            showInvalidFileDialog(INVALID_CFG_FILE_LEN);
-            return;
-        }
-        byte[] byteArray = new byte[TestParamEncoder.TEST_ENCODE_SIZEOF_INT32 + TestParamEncoder.testEncodeSizeOfArray(cfgData.length)];
-        int offset = 0;
-        offset = TestParamEncoder.encodeInt32(byteArray, offset, TestResultParser.TEST_TOKEN_FPC_DOWNLOAD_CFG, 1);
-        TestParamEncoder.encodeArray(byteArray, offset, TestResultParser.TEST_PARAM_TOKEN_CFG_DATA, cfgData, cfgData.length);
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_FPC_KEY_DOWNLOAD_CFG, byteArray);
-    }
-
-    public byte[] readFwCfgFile(String fileName) {
-        byte[] buffer = null;
-        InputStream fin = null;
-        try {
-            fin = getResources().getAssets().open(fileName);
-            int length = fin.available();
-
-            buffer = new byte[length];
-            fin.read(buffer);
-            fin.close();
-        } catch (IOException e) {
-            try {
-                if (null != fin)
-                    fin.close();
-            } catch (IOException ee) {
-                ee.printStackTrace();
-            }
-            Log.e(TAG, "Failed to open " + fileName);
-        }
-        return buffer;
-    }
-
-    private void showInvalidFileDialog(int reason) {
-        int message = R.string.invalid_fw_file;
-
-        switch (reason) {
-            case INVALID_FW_FILE_LEN:
-                message = R.string.invalid_fw_file;
-                break;
-
-            case INVALID_FW_FILE_DATA:
-                message = R.string.invalid_fw_file;
-                break;
-
-            case INVALID_CFG_FILE_LEN:
-                message = R.string.invalid_cfg_file;
-                break;
-        }
-
-        new AlertDialog.Builder(this)
-                .setTitle(this.getString(R.string.sytem_info))
-                .setMessage(this.getString(message))
-                .setPositiveButton(this.getString(R.string.ok),
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        })
-                .show();
     }
 }
