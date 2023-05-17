@@ -2,27 +2,19 @@
  * Copyright (C) 2013-2016, Shenzhen Huiding Technology Co., Ltd.
  * All Rights Reserved.
  */
-
 package com.goodix.gftest.utils.checker;
+
+import android.util.Log;
+
+import com.goodix.fingerprint.Constants;
+import com.goodix.fingerprint.utils.TestResultParser;
 
 import java.lang.Override;
 import java.util.HashMap;
 
-import com.goodix.fingerprint.Constants;
-import com.goodix.fingerprint.utils.TestResultParser;
-import com.goodix.gftest.utils.checker.OswegoMChecker;
-import com.goodix.gftest.utils.checker.MilanASeriesChecker;
-import com.goodix.gftest.utils.checker.MilanFSeriesChecker;
-import com.goodix.gftest.utils.checker.MilanHVSeriesChecker;
-import com.goodix.gftest.utils.checker.MilanANSeriesChecker;
-
-import android.util.Log;
-
 public class TestResultChecker {
-
     private static final String TAG = "TestResultChecker";
 
-    public static final int TEST_NONE = 0;
     public static final int TEST_SPI = 1;
     public static final int TEST_RESET_PIN = 2;
     public static final int TEST_INTERRUPT_PIN = 3;
@@ -33,10 +25,8 @@ public class TestResultChecker {
     public static final int TEST_CAPTURE = 8;
     public static final int TEST_ALGO = 9;
     public static final int TEST_FW_VERSION = 10;
-    public static final int TEST_SENSOR_CHECK = 11;
     public static final int TEST_BIO_CALIBRATION = 12;
     public static final int TEST_HBD_CALIBRATION = 13;
-    public static final int TEST_CODE_FW_VERSION = 14;
     public static final int TEST_RAWDATA_SATURATED = 15;
     public static final int TEST_UNTRUSTED_ENROLL = 16;
     public static final int TEST_UNTRUSTED_AUTHENTICATE = 17;
@@ -47,6 +37,10 @@ public class TestResultChecker {
     public static final int TEST_TWILL_BADPOINT = 22;
     public static final int TEST_SNR = 23;
     public static final int TEST_PIXEL_SHORT_STREAK = 24;
+    // Not used
+    public static final int TEST_NONE = 0;
+    public static final int TEST_SENSOR_CHECK = 11;
+    public static final int TEST_CODE_FW_VERSION = 14;
     public static final int TEST_MAX = 25;
 
     private static TestResultChecker mInstance = null;
@@ -511,7 +505,7 @@ public class TestResultChecker {
                     fpcRingCancelationMinVal = Constants.MilanAn.TEST_FPC_RING_CANCEL_MIN;
                     fpcRingCancelationMaxVal = Constants.MilanAn.TEST_FPC_RING_CANCEL_MAX;
 
-                break;
+                    break;
 
                 case Constants.GF_CHIP_5628DN3:
                     chipId = Constants.ChicagoH_HV.TEST_SPI_CHIP_ID;
@@ -545,9 +539,11 @@ public class TestResultChecker {
         MilanHVSeriesChecker("com.goodix.gftest.utils.checker.MilanHVSeriesChecker"),
         MilanANSeriesChecker("com.goodix.gftest.utils.checker.MilanANSeriesChecker");
         private String value = "";
+
         private TestResultCheckerEnum(String value) {
             this.value = value;
         }
+
         public String getValue() {
             return this.value;
         }
@@ -555,10 +551,15 @@ public class TestResultChecker {
 
     public interface ITestResultCheckerFactory {
         public Checker createCheckerByChip(int chipSeries, int chipType);
+
         public Checker createOswegoMChecker(int chipType);
+
         public Checker createMilanASeriesChecker(int chipType);
+
         public Checker createMilanFSeriesChecker(int chipType);
+
         public Checker createMilanHVSeriesChecker(int chipType);
+
         public Checker createMilanANSeriesChecker(int chipType);
     }
 
@@ -567,20 +568,16 @@ public class TestResultChecker {
             Checker checker = null;
             if (!testResultCheckerEnum.getValue().equals("")) {
                 try {
-                    if(testResultCheckerEnum.getValue().equals("com.goodix.gftest.utils.checker.OswegoMChecker")){
-                        checker=new OswegoMChecker();
-                    }
-                    else if(testResultCheckerEnum.getValue().equals("com.goodix.gftest.utils.checker.MilanASeriesChecker")){
-                        checker=new MilanASeriesChecker();
-                    }
-                    else if(testResultCheckerEnum.getValue().equals("com.goodix.gftest.utils.checker.MilanFSeriesChecker")){
-                        checker=new MilanFSeriesChecker();
-                    }
-                    else if(testResultCheckerEnum.getValue().equals("com.goodix.gftest.utils.checker.MilanHVSeriesChecker")){
-                        checker=new MilanHVSeriesChecker();
-                    }
-                    else if(testResultCheckerEnum.getValue().equals("com.goodix.gftest.utils.checker.MilanANSeriesChecker")){
-                        checker=new MilanANSeriesChecker();
+                    if (testResultCheckerEnum.getValue().equals("com.goodix.gftest.utils.checker.OswegoMChecker")) {
+                        checker = new OswegoMChecker();
+                    } else if (testResultCheckerEnum.getValue().equals("com.goodix.gftest.utils.checker.MilanASeriesChecker")) {
+                        checker = new MilanASeriesChecker();
+                    } else if (testResultCheckerEnum.getValue().equals("com.goodix.gftest.utils.checker.MilanFSeriesChecker")) {
+                        checker = new MilanFSeriesChecker();
+                    } else if (testResultCheckerEnum.getValue().equals("com.goodix.gftest.utils.checker.MilanHVSeriesChecker")) {
+                        checker = new MilanHVSeriesChecker();
+                    } else if (testResultCheckerEnum.getValue().equals("com.goodix.gftest.utils.checker.MilanANSeriesChecker")) {
+                        checker = new MilanANSeriesChecker();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -621,47 +618,52 @@ public class TestResultChecker {
                     return null;
             }
         }
+
         @Override
         public Checker createOswegoMChecker(int chipType) {
             Log.i(TAG, "createOswegoMChecker");
             Checker checker = super.createChecker(TestResultCheckerEnum.OswegoMChecker);
-            if (checker!=null) {
+            if (checker != null) {
                 checker.setChipTypeAndInitThreshold(chipType);
             }
             return checker;
         }
+
         @Override
         public Checker createMilanASeriesChecker(int chipType) {
             Log.i(TAG, "createMilanASeriesChecker");
             Checker checker = super.createChecker(TestResultCheckerEnum.MilanASeriesChecker);
-            if (checker!=null) {
+            if (checker != null) {
                 checker.setChipTypeAndInitThreshold(chipType);
             }
             return checker;
         }
+
         @Override
         public Checker createMilanFSeriesChecker(int chipType) {
             Log.i(TAG, "createMilanFSeriesChecker");
             Checker checker = super.createChecker(TestResultCheckerEnum.MilanFSeriesChecker);
-            if (checker!=null) {
+            if (checker != null) {
                 checker.setChipTypeAndInitThreshold(chipType);
             }
             return checker;
         }
+
         @Override
         public Checker createMilanHVSeriesChecker(int chipType) {
             Log.i(TAG, "createMilanHVSeriesChecker");
             Checker checker = super.createChecker(TestResultCheckerEnum.MilanHVSeriesChecker);
-            if (checker!=null) {
+            if (checker != null) {
                 checker.setChipTypeAndInitThreshold(chipType);
             }
             return checker;
         }
+
         @Override
         public Checker createMilanANSeriesChecker(int chipType) {
             Log.i(TAG, "createMilanANSeriesChecker");
             Checker checker = super.createChecker(TestResultCheckerEnum.MilanANSeriesChecker);
-            if (checker!=null) {
+            if (checker != null) {
                 checker.setChipTypeAndInitThreshold(chipType);
             }
             return checker;
@@ -685,19 +687,18 @@ public class TestResultChecker {
         public String toString() {
             StringBuilder builder = new StringBuilder();
             builder.append("error code:").append(mErrorCode).append("\n")
-            .append("avgDiffVal:").append(mAvgDiffVal).append("\n")
-            .append("badPixelNum:").append(mBadPixelNum).append("\n")
-            .append("localBadPixelNum:").append(mLocalBadPixelNum).append("\n")
-            .append("allTiltAngle:").append(mAllTiltAngle).append("\n")
-            .append("blockTiltAngleMax:").append(mBlockTiltAngleMax).append("\n")
-            .append("localWorst:").append(mLocalWorst).append("\n")
-            .append("singular:").append(mSingular).append("\n")
-            .append("inCircle:").append(mInCircle).append("\n")
-            .append("smallBadPixel:").append(mSmallBadPixel).append("\n")
-            .append("bigBadPixel:").append(mBigBadPixel).append("\n");
+                    .append("avgDiffVal:").append(mAvgDiffVal).append("\n")
+                    .append("badPixelNum:").append(mBadPixelNum).append("\n")
+                    .append("localBadPixelNum:").append(mLocalBadPixelNum).append("\n")
+                    .append("allTiltAngle:").append(mAllTiltAngle).append("\n")
+                    .append("blockTiltAngleMax:").append(mBlockTiltAngleMax).append("\n")
+                    .append("localWorst:").append(mLocalWorst).append("\n")
+                    .append("singular:").append(mSingular).append("\n")
+                    .append("inCircle:").append(mInCircle).append("\n")
+                    .append("smallBadPixel:").append(mSmallBadPixel).append("\n")
+                    .append("bigBadPixel:").append(mBigBadPixel).append("\n");
 
             return builder.toString();
         }
     }
 }
-
