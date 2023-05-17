@@ -18,7 +18,6 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -49,11 +48,6 @@ import java.util.HashMap;
 
 public class TouchTestActivity extends Activity {
     private static final String TAG = "TouchTestActivity";
-
-    public static final int RING_KEY = 1;
-    public static final int MENU_KEY = 3;
-    public static final int BACK_KEY = 4;
-    public static final int KEY_STATUS_DOWN = 1;
 
     private static final int PROGRESS_BAR_MAX = 10000;
 
@@ -131,10 +125,413 @@ public class TouchTestActivity extends Activity {
     private CancellationSignal mEnrollmentCancel;
     private CancellationSignal mAuthenticationCancel;
 
-    private HashMap<Integer, Object> mPendingBioDetail;
-
     private Checker mTestResultChecker;
     private boolean mIsPrevStablePassed = false;
+
+    private class MyAdapter extends BaseAdapter {
+        private static final int ITEM_VIEW_TYPE_UNTRUSTED_NORMAL = 0;
+        private static final int ITEM_VIEW_TYPE_UNTRUSTED_ENROLL = 1;
+        private static final int ITEM_VIEW_TYPE_UNTRUSTED_AUTHENTICATED = 2;
+        private static final int ITEM_VIEW_TYPE_MAX = 3;
+
+        @Override
+        public int getCount() {
+            return TEST_ITEM.length;
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return position;
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            int type;
+            switch (TEST_ITEM[position]) {
+                case TestResultChecker.TEST_UNTRUSTED_ENROLL:
+                    type = ITEM_VIEW_TYPE_UNTRUSTED_ENROLL;
+                    break;
+                case TestResultChecker.TEST_UNTRUSTED_AUTHENTICATE:
+                    type = ITEM_VIEW_TYPE_UNTRUSTED_AUTHENTICATED;
+                    break;
+                default:
+                    type = ITEM_VIEW_TYPE_UNTRUSTED_NORMAL;
+                    break;
+            }
+            return type;
+        }
+
+        @Override
+        public int getViewTypeCount() {
+            return ITEM_VIEW_TYPE_MAX;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            int type = getItemViewType(position);
+            Holder holder = null;
+
+            if (convertView == null) {
+                holder = new Holder();
+                convertView = LayoutInflater.from(TouchTestActivity.this).inflate(
+                        R.layout.item_home, null);
+                holder.titleView = (TextView) convertView.findViewById(R.id.test_title);
+                holder.resultView = (TextView) convertView.findViewById(R.id.test_result);
+                holder.testingViewNormal = (ProgressBar) convertView
+                        .findViewById(R.id.testing_normal);
+                holder.testingViewNormal.setVisibility(View.GONE);
+                holder.testingViewUntrustEnroll = (RelativeLayout) convertView
+                        .findViewById(R.id.testing_untrust_enroll);
+                holder.testingViewUntrustEnroll.setVisibility(View.VISIBLE);
+                holder.testingViewUntrustAuthenticate = (LinearLayout) convertView
+                        .findViewById(R.id.testing_untrust_authenticate);
+                holder.testingViewUntrustAuthenticate.setVisibility(View.GONE);
+                holder.progressBar = (HoloCircularProgressBar) convertView
+                        .findViewById(R.id.fingerprint_progress_bar);
+                holder.progressBar.setMax(PROGRESS_BAR_MAX);
+
+                switch (type) {
+                    case ITEM_VIEW_TYPE_UNTRUSTED_ENROLL: {
+                        final ImageView fingerprintAnimator = (ImageView) convertView
+                                .findViewById(R.id.fingerprint_animator_untrust_enroll);
+                        final AnimatedVectorDrawable iconAnimationDrawable = (AnimatedVectorDrawable) fingerprintAnimator
+                                .getDrawable();
+                        fingerprintAnimator.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                iconAnimationDrawable.start();
+                                fingerprintAnimator.removeCallbacks(this);
+                                fingerprintAnimator.postDelayed(this, 2000);
+                            }
+                        }, 2000);
+
+                        holder.iconAnimationDrawable = iconAnimationDrawable;
+                        break;
+                    }
+
+                    case ITEM_VIEW_TYPE_UNTRUSTED_AUTHENTICATED: {
+                        final ImageView fingerprintAnimator = (ImageView) convertView
+                                .findViewById(R.id.fingerprint_animator_untrust_authenticate);
+                        final AnimatedVectorDrawable iconAnimationDrawable = (AnimatedVectorDrawable) fingerprintAnimator
+                                .getDrawable();
+
+                        fingerprintAnimator.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                iconAnimationDrawable.start();
+                                fingerprintAnimator.removeCallbacks(this);
+                                fingerprintAnimator.postDelayed(this, 2000);
+                            }
+                        }, 2000);
+
+                        holder.iconAnimationDrawable = iconAnimationDrawable;
+                        holder.retryView = (TextView) convertView
+                                .findViewById(R.id.authenticate_retry_count);
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+
+                convertView.setTag(holder);
+            } else {
+                holder = (Holder) convertView.getTag();
+            }
+
+            if (mSensorValidityTestFlag == 0) {
+                holder.titleView.setEnabled(false);
+            } else {
+                holder.titleView.setEnabled(true);
+            }
+
+            switch (TEST_ITEM[position]) {
+                case TestResultChecker.TEST_SPI:
+                    holder.titleView.setText(R.string.test_spi);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_PIXEL:
+                    if (mConfig != null
+                            && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
+                            || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES
+                            || mConfig.mChipSeries == Constants.GF_MILAN_A_SERIES
+                            || mConfig.mChipSeries == Constants.GF_MILAN_HV
+                            || mConfig.mChipSeries == Constants.GF_MILAN_AN_SERIES)) {
+                        holder.titleView.setText(R.string.test_pixel_open);
+                    } else {
+                        holder.titleView.setText(R.string.test_sensor);
+                    }
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_PIXEL_SHORT_STREAK:
+                    if (mConfig != null
+                            && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
+                            || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES
+                            || mConfig.mChipSeries == Constants.GF_MILAN_A_SERIES
+                            || mConfig.mChipSeries == Constants.GF_MILAN_HV
+                            || mConfig.mChipSeries == Constants.GF_MILAN_AN_SERIES)) {
+                        holder.titleView.setText(R.string.test_pixel_short_streak);
+                    } else {
+                        holder.titleView.setText(R.string.test_sensor);
+                    }
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_RESET_PIN:
+                    holder.titleView.setText(R.string.test_reset_pin);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_INTERRUPT_PIN:
+                    holder.titleView.setText(R.string.test_interrupt_pin);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_BAD_POINT:
+                    holder.titleView.setText(R.string.test_bad_point);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_PERFORMANCE:
+                    holder.titleView.setText(R.string.test_performance);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_CAPTURE:
+                    holder.titleView.setText(R.string.test_capture);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_ALGO:
+                    holder.titleView.setText(R.string.test_algo);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_BIO_CALIBRATION:
+                    holder.titleView.setText(R.string.test_bio_assay);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_HBD_CALIBRATION:
+                    holder.titleView.setText(R.string.test_hbd_feature);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_FW_VERSION:
+                    holder.titleView.setText(R.string.test_fw_version);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_RAWDATA_SATURATED:
+                    holder.titleView.setText(R.string.test_rawdata_saturated);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_UNTRUSTED_ENROLL:
+                    holder.titleView.setText(R.string.untrusted_enroll);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_UNTRUSTED_AUTHENTICATE:
+                    holder.titleView.setText(R.string.untrusted_authenticate);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_SENSOR_FINE:
+                    holder.titleView.setText(R.string.test_sensor_fine);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_FPC_MENU_KEY:
+                    holder.titleView.setText(R.string.fpc_menu_key_title);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_FPC_BACK_KEY:
+                    holder.titleView.setText(R.string.fpc_back_key_title);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_FPC_RING_KEY:
+                    holder.titleView.setText(R.string.fpc_ring_key_title);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_STABLE_FACTOR:
+                    holder.titleView.setText(R.string.test_stable_factor);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_TWILL_BADPOINT:
+                    holder.titleView.setText(R.string.test_twill_badpoint);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+
+                case TestResultChecker.TEST_SNR:
+                    holder.titleView.setText(R.string.snr_test);
+                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
+                    break;
+            }
+
+            return convertView;
+        }
+
+        private void updateHolderTestingView(Holder holder, int type, int visibility) {
+            if (ITEM_VIEW_TYPE_UNTRUSTED_NORMAL == type) {
+                holder.testingViewNormal.setVisibility(visibility);
+                holder.testingViewUntrustEnroll.setVisibility(View.GONE);
+                holder.testingViewUntrustAuthenticate.setVisibility(View.GONE);
+            } else if (ITEM_VIEW_TYPE_UNTRUSTED_ENROLL == type) {
+                holder.testingViewNormal.setVisibility(View.GONE);
+                holder.testingViewUntrustEnroll.setVisibility(visibility);
+                holder.testingViewUntrustAuthenticate.setVisibility(View.GONE);
+            } else if (ITEM_VIEW_TYPE_UNTRUSTED_AUTHENTICATED == type) {
+                holder.testingViewNormal.setVisibility(View.GONE);
+                holder.testingViewUntrustEnroll.setVisibility(View.GONE);
+                holder.testingViewUntrustAuthenticate.setVisibility(visibility);
+            }
+        }
+
+        private void updateTestView(Holder holder, int type, int status) {
+            switch (status) {
+                case TEST_ITEM_STATUS_IDLE:
+                    holder.resultView.setVisibility(View.INVISIBLE);
+                    updateHolderTestingView(holder, type, View.INVISIBLE);
+                    break;
+
+                case TEST_ITEM_STATUS_TESTING:
+                    holder.resultView.setVisibility(View.INVISIBLE);
+                    updateHolderTestingView(holder, type, View.VISIBLE);
+                    break;
+
+                case TEST_ITEM_STATUS_SUCCEED:
+                    holder.resultView.setVisibility(View.VISIBLE);
+                    updateHolderTestingView(holder, type, View.INVISIBLE);
+                    holder.resultView.setText(R.string.test_succeed);
+                    holder.resultView
+                            .setTextColor(getResources().getColor(R.color.test_succeed_color));
+                    break;
+
+                case TEST_ITEM_STATUS_FAILED:
+                    holder.resultView.setVisibility(View.VISIBLE);
+                    updateHolderTestingView(holder, type, View.INVISIBLE);
+                    holder.resultView.setText(R.string.test_failed);
+                    holder.resultView
+                            .setTextColor(getResources().getColor(R.color.test_failed_color));
+                    break;
+
+                case TEST_ITEM_STATUS_TIMEOUT:
+                    holder.resultView.setVisibility(View.VISIBLE);
+                    updateHolderTestingView(holder, type, View.INVISIBLE);
+                    holder.resultView.setText(R.string.timeout);
+                    holder.resultView
+                            .setTextColor(getResources().getColor(R.color.test_failed_color));
+                    break;
+
+                case TEST_ITEM_STATUS_CANCELED:
+                    holder.resultView.setVisibility(View.VISIBLE);
+                    updateHolderTestingView(holder, type, View.INVISIBLE);
+                    holder.resultView.setText(R.string.canceled);
+                    holder.resultView
+                            .setTextColor(getResources().getColor(R.color.test_failed_color));
+                    break;
+
+                case TEST_ITEM_STATUS_WAIT_FINGER_INPUT:
+                    holder.resultView.setVisibility(View.VISIBLE);
+                    holder.resultView.setText(R.string.normal_touch_sensor);
+                    holder.resultView.setTextColor(getResources().getColor(R.color.fg_color));
+                    updateHolderTestingView(holder, type, View.INVISIBLE);
+                    break;
+
+                case TEST_ITEM_STATUS_WAIT_TWILL_INPUT:
+                    holder.resultView.setVisibility(View.VISIBLE);
+                    holder.resultView.setText(R.string.snr_touch_sensor);
+                    holder.resultView.setTextColor(getResources().getColor(R.color.fg_color));
+                    updateHolderTestingView(holder, type, View.INVISIBLE);
+                    break;
+
+                case TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT:
+                    holder.resultView.setVisibility(View.VISIBLE);
+                    holder.resultView.setText(R.string.bad_point_touch_sensor);
+                    holder.resultView.setTextColor(getResources().getColor(R.color.fg_color));
+                    updateHolderTestingView(holder, type, View.INVISIBLE);
+                    break;
+
+                case TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT:
+                    holder.resultView.setVisibility(View.VISIBLE);
+                    holder.resultView.setText(R.string.real_finger_touch_sensor);
+                    holder.resultView.setTextColor(getResources().getColor(R.color.fg_color));
+                    updateHolderTestingView(holder, type, View.INVISIBLE);
+                    break;
+
+                case TEST_ITEM_STATUS_ENROLLING:
+                    holder.resultView.setVisibility(View.INVISIBLE);
+                    updateHolderTestingView(holder, type, View.VISIBLE);
+                    holder.iconAnimationDrawable.start();
+                    holder.progressBar.setProgress(PROGRESS_BAR_MAX
+                            * (mConfig.mEnrollingMinTemplates - mEnrollmentRemaining)
+                            / mEnrollmentSteps);
+                    break;
+
+                case TEST_ITEM_STATUS_AUTHENGICATING: {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(mFailedAttempts);
+                    sb.append("/");
+                    sb.append(MAX_FAILED_ATTEMPTS);
+                    holder.resultView.setVisibility(View.INVISIBLE);
+                    updateHolderTestingView(holder, type, View.VISIBLE);
+                    holder.iconAnimationDrawable.start();
+                    holder.retryView.setText(sb.toString());
+                    break;
+                }
+
+                case TEST_ITEM_STATUS_WAIT_FINGER_DOWN: {
+                    holder.resultView.setVisibility(View.VISIBLE);
+                    holder.resultView.setText(R.string.wait_finger_down_tip);
+                    holder.resultView.setTextColor(getResources().getColor(R.color.fg_color));
+                    updateHolderTestingView(holder, type, View.INVISIBLE);
+                    break;
+                }
+
+                case TEST_ITEM_STATUS_WAIT_FINGER_UP: {
+                    holder.resultView.setVisibility(View.VISIBLE);
+                    holder.resultView.setText(R.string.wait_finger_up_tip);
+                    holder.resultView.setTextColor(getResources().getColor(R.color.fg_color));
+                    updateHolderTestingView(holder, type, View.INVISIBLE);
+                    break;
+                }
+
+                case TEST_ITEM_STATUS_NO_SUPPORT: {
+                    holder.resultView.setVisibility(View.VISIBLE);
+                    holder.resultView.setText(R.string.test_no_support);
+                    holder.resultView.setTextColor(getResources().getColor(R.color.test_succeed_color));
+                    updateHolderTestingView(holder, type, View.INVISIBLE);
+                    break;
+                }
+
+                default:
+                    break;
+            }
+        }
+
+        private class Holder {
+            TextView titleView;
+            TextView resultView;
+            ProgressBar testingViewNormal;
+            RelativeLayout testingViewUntrustEnroll;
+            LinearLayout testingViewUntrustAuthenticate;
+            HoloCircularProgressBar progressBar;
+            AnimatedVectorDrawable iconAnimationDrawable;
+            TextView retryView;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,102 +552,184 @@ public class TouchTestActivity extends Activity {
                 return;
             }
 
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    switch (cmdId) {
-                        case Constants.CMD_TEST_SPI:
-                            if (mTestStatus.get(TestResultChecker.TEST_SPI) == TEST_ITEM_STATUS_TESTING) {
-                                onTestSpi(result);
-                            } else if (mTestStatus.get(TestResultChecker.TEST_FW_VERSION) == TEST_ITEM_STATUS_TESTING) {
-                                onTestFWVersion(result);
-                            }
-                            break;
-                        case Constants.CMD_TEST_RESET_PIN:
-                            if (mTestStatus.get(TestResultChecker.TEST_RESET_PIN) == TEST_ITEM_STATUS_TESTING) {
-                                onTestResetPin(result);
-                            }
-                            break;
-                        case Constants.CMD_TEST_INTERRUPT_PIN:
-                            if (mTestStatus.get(TestResultChecker.TEST_INTERRUPT_PIN) == TEST_ITEM_STATUS_TESTING) {
-                                onTestInterruptPin(result);
-                            }
-                            break;
-                        case Constants.CMD_TEST_PIXEL_OPEN:
-                            if (mTestStatus.get(TestResultChecker.TEST_PIXEL) == TEST_ITEM_STATUS_TESTING) {
-                                onTestSensor(result);
-                            }
-                            break;
-                        case Constants.CMD_TEST_BAD_POINT:
-                            if (mTestStatus.get(TestResultChecker.TEST_BAD_POINT) == TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT) {
-                                onTestBadPoint(result);
-                            }
-                            break;
-                        case Constants.CMD_TEST_PERFORMANCE:
-                            if (mTestStatus.get(TestResultChecker.TEST_ALGO) != null && (mTestStatus.get(
-                                    TestResultChecker.TEST_ALGO) == TEST_ITEM_STATUS_WAIT_FINGER_INPUT)) {
-                                onTestAlgo(result);
-                            } else if (mTestStatus.get(TestResultChecker.TEST_CAPTURE) != null && (mTestStatus.get(
-                                    TestResultChecker.TEST_CAPTURE) == TEST_ITEM_STATUS_WAIT_FINGER_INPUT)) {
-                                onTestCapture(result);
-                            } else if (mTestStatus.get(TestResultChecker.TEST_PERFORMANCE) != null && (mTestStatus.get(
-                                    TestResultChecker.TEST_PERFORMANCE) == TEST_ITEM_STATUS_WAIT_FINGER_INPUT)) {
-                                onTestPerformance(result);
-                            }
-                            break;
-                        case Constants.CMD_TEST_PIXEL_SHORT_STREAK:
-                            if (mTestStatus.get(TestResultChecker.TEST_PIXEL_SHORT_STREAK) == TEST_ITEM_STATUS_TESTING) {
-                                onTestSensorShortStreak(result);
-                            }
-                            break;
-                        case Constants.CMD_INIT_CALLBACK: {
-                            mConfig = mGoodixFingerprintManager.getConfig();
+            mHandler.post(() -> {
+                switch (cmdId) {
+                    case Constants.CMD_INIT_CALLBACK:
+                        mConfig = mGoodixFingerprintManager.getConfig();
 
-                            Log.i(TAG, "mConfig.mChipSeries = " + mConfig.mChipSeries + "; mConfig.mChipType = " + mConfig.mChipType);
-                            if (null != mConfig && mConfig.mChipType != Constants.GF_CHIP_UNKNOWN) {
-                                mTestResultChecker = TestResultChecker.getInstance().getTestResultCheckerFactory().createCheckerByChip(mConfig.mChipSeries, mConfig.mChipType);
-                                TEST_ITEM = TEST_ITEM_DUBAI_A_SERIES_AUTO;
-                                // set default enrolling min templates
-                                mEnrollmentSteps = mConfig.mEnrollingMinTemplates;
-                                mEnrollmentRemaining = mEnrollmentSteps;
-                            }
-                            initView();
-
-                            // save result to "/data/data/com.goodix.gftest/files/testtool.txt"
-                            TestHistoryUtils.init(getFilesDir().getPath(), "testtool.txt", "testdetail.txt");
-
-                            if (null != mConfig && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
-                                    || Constants.GF_MILAN_HV == mConfig.mChipSeries || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES)) {
-                                Log.d(TAG, "TEST_CHECK_SENSOR_TEST_INFO start");
-                                if (mIsSensorValidityTested == false) {
-                                    mSensorValidityTestFlag = 0;
-                                    mAutoTestingTitleView.setEnabled(false);
-                                    mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_SENSOR_VALIDITY);
-                                    mDialog = new ProgressDialog(TouchTestActivity.this);
-                                    mDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                                    mDialog.setCancelable(true);
-                                    mDialog.setCanceledOnTouchOutside(false);
-                                    mDialog.setMessage(TouchTestActivity.this.getString(R.string.sensor_checking));
-                                    mDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                                        @Override
-                                        public void onCancel(DialogInterface dialog) {
-                                        }
-                                    });
-                                    mDialog.show();
-                                }
-                            }
-
-                            //if can't get sensor chip_id ,no need to start runnable
-                            if (TEST_ITEM != null) {
-                                getTimeout();
-                            }
-                            break;
+                        Log.i(TAG, "mConfig.mChipSeries = " + mConfig.mChipSeries
+                                + "; mConfig.mChipType = " + mConfig.mChipType);
+                        if (null != mConfig && mConfig.mChipType != Constants.GF_CHIP_UNKNOWN) {
+                            mTestResultChecker = TestResultChecker.getInstance()
+                                    .getTestResultCheckerFactory()
+                                    .createCheckerByChip(mConfig.mChipSeries, mConfig.mChipType);
+                            TEST_ITEM = TEST_ITEM_DUBAI_A_SERIES_AUTO;
+                            // set default enrolling min templates
+                            mEnrollmentSteps = mConfig.mEnrollingMinTemplates;
+                            mEnrollmentRemaining = mEnrollmentSteps;
                         }
-                    }
+                        initView();
+
+                        // save result to "/data/data/com.goodix.gftest/files/testtool.txt"
+                        TestHistoryUtils.init(getFilesDir().getPath(), "testtool.txt",
+                                "testdetail.txt");
+
+                        if (null != mConfig && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
+                                || Constants.GF_MILAN_HV == mConfig.mChipSeries
+                                || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES)) {
+                            Log.d(TAG, "TEST_CHECK_SENSOR_TEST_INFO start");
+                            if (mIsSensorValidityTested == false) {
+                                mSensorValidityTestFlag = 0;
+                                mAutoTestingTitleView.setEnabled(false);
+                                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_SENSOR_VALIDITY);
+                                mDialog = new ProgressDialog(TouchTestActivity.this);
+                                mDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                                mDialog.setCancelable(true);
+                                mDialog.setCanceledOnTouchOutside(false);
+                                mDialog.setMessage(TouchTestActivity.this.getString(R.string.sensor_checking));
+                                mDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                                    @Override
+                                    public void onCancel(DialogInterface dialog) {
+                                    }
+                                });
+                                mDialog.show();
+                            }
+                        }
+
+                        //if can't get sensor chip_id ,no need to start runnable
+                        if (TEST_ITEM != null) {
+                            getTimeout();
+                        }
+                        break;
+                    case Constants.CMD_TEST_SPI:
+                        if (mTestStatus.get(TestResultChecker.TEST_SPI) == TEST_ITEM_STATUS_TESTING) {
+                            onTestSpi(result);
+                        } else if (mTestStatus.get(TestResultChecker.TEST_FW_VERSION) == TEST_ITEM_STATUS_TESTING) {
+                            onTestFWVersion(result);
+                        }
+                        break;
+                    case Constants.CMD_TEST_RESET_PIN:
+                        if (mTestStatus.get(TestResultChecker.TEST_RESET_PIN) == TEST_ITEM_STATUS_TESTING) {
+                            onTestResetPin(result);
+                        }
+                        break;
+                    case Constants.CMD_TEST_INTERRUPT_PIN:
+                        if (mTestStatus.get(TestResultChecker.TEST_INTERRUPT_PIN) == TEST_ITEM_STATUS_TESTING) {
+                            onTestInterruptPin(result);
+                        }
+                        break;
+                    case Constants.CMD_TEST_PIXEL_OPEN:
+                        if (mTestStatus.get(TestResultChecker.TEST_PIXEL) == TEST_ITEM_STATUS_TESTING) {
+                            onTestSensor(result);
+                        }
+                        break;
+                    case Constants.CMD_TEST_BAD_POINT:
+                        if (mTestStatus.get(TestResultChecker.TEST_BAD_POINT) == TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT) {
+                            onTestBadPoint(result);
+                        }
+                        break;
+                    case Constants.CMD_TEST_PERFORMANCE:
+                        if (mTestStatus.get(TestResultChecker.TEST_ALGO) != null && (mTestStatus.get(
+                                TestResultChecker.TEST_ALGO) == TEST_ITEM_STATUS_WAIT_FINGER_INPUT)) {
+                            onTestAlgo(result);
+                        } else if (mTestStatus.get(TestResultChecker.TEST_CAPTURE) != null && (mTestStatus.get(
+                                TestResultChecker.TEST_CAPTURE) == TEST_ITEM_STATUS_WAIT_FINGER_INPUT)) {
+                            onTestCapture(result);
+                        } else if (mTestStatus.get(TestResultChecker.TEST_PERFORMANCE) != null && (mTestStatus.get(
+                                TestResultChecker.TEST_PERFORMANCE) == TEST_ITEM_STATUS_WAIT_FINGER_INPUT)) {
+                            onTestPerformance(result);
+                        }
+                        break;
+                    case Constants.CMD_TEST_PIXEL_SHORT_STREAK:
+                        if (mTestStatus.get(TestResultChecker.TEST_PIXEL_SHORT_STREAK) == TEST_ITEM_STATUS_TESTING) {
+                            onTestSensorShortStreak(result);
+                        }
+                        break;
                 }
             });
         }
     };
+
+    private void initView() {
+        if (TEST_ITEM == null) {
+            return;
+        }
+
+        for (Integer test_item : TEST_ITEM) {
+            mTestStatus.put(test_item, TEST_ITEM_STATUS_IDLE);
+        }
+
+        mListView = (ListView) findViewById(R.id.listview);
+        mListView.setOnItemClickListener((parent, view, position, id) -> {
+            if (0 == mSensorValidityTestFlag) {
+                return;
+            }
+
+            // header view
+            if (position == 0) {
+                Log.d(TAG, "onItemClick mAutoTest = " + mAutoTest);
+                if (mAutoTest) {
+                    if (mToast != null) {
+                        mToast.cancel();
+                    }
+                    mToast = Toast.makeText(TouchTestActivity.this, R.string.busy,
+                            Toast.LENGTH_SHORT);
+                    mToast.show();
+                } else {
+                    startAutoTest();
+                }
+                return;
+            }
+
+            if (position - 1 >= TEST_ITEM.length && mAutoTest) {
+                Log.d(TAG, "onItemClick mAutoTest = " + mAutoTest);
+                return;
+            }
+
+            mAutoTestPosition = position;
+            startTest(TEST_ITEM[position - 1]);
+        });
+
+        mListView.setAdapter(mAdapter);
+
+        View header = LayoutInflater.from(TouchTestActivity.this)
+                .inflate(R.layout.item_home, null, false);
+        if (null != header) {
+            header.findViewById(R.id.testing_normal).setVisibility(View.INVISIBLE);
+        }
+
+        mAutoTestingTitleView = (TextView) header.findViewById(R.id.test_title);
+        mAutoTestingTitleView.setText(R.string.test_auto);
+
+        mAutoTestingView = (TextView) header.findViewById(R.id.test_result);
+        mAutoTestingView.setText(R.string.testing);
+        mAutoTestingView.setVisibility(View.INVISIBLE);
+        mListView.addHeaderView(header);
+    }
+
+    private void getTimeout() {
+        try {
+            Class<?> systemPropertiesClazz = Class.forName("android.os.SystemProperties");
+            Method method = systemPropertiesClazz.getMethod("getLong", new Class[]{
+                    String.class, long.class
+            });
+            mAutoTestTimeout = (Long) method.invoke(null, new Object[]{
+                    Constants.PROPERTY_TEST_ITME_TIMEOUT,
+                    Constants.TEST_TIMEOUT_MS
+            });
+            Log.i(TAG, "getTimeout mAutoTestTimeout = " + mAutoTestTimeout);
+        } catch (ClassNotFoundException e) {
+            Log.e(TAG, "ClassNotFoundException");
+        } catch (NoSuchMethodException e) {
+            Log.e(TAG, "NoSuchMethodException");
+        } catch (IllegalAccessException e) {
+            Log.e(TAG, "IllegalAccessException");
+        } catch (IllegalArgumentException e) {
+            Log.e(TAG, "IllegalArgumentException");
+        } catch (InvocationTargetException e) {
+            Log.e(TAG, "InvocationTargetException");
+        }
+    }
 
     private void onTestSpi(final HashMap<Integer, Object> result) {
         Log.d(TAG, "TEST_SPI end");
@@ -363,61 +842,6 @@ public class TouchTestActivity extends Activity {
         }
     }
 
-    private void onTestSensorShortStreak(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "TEST_PIXEL_SHORT_STREAK end");
-
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (mTestStatus.get(TestResultChecker.TEST_PIXEL_SHORT_STREAK) != TEST_ITEM_STATUS_TESTING) {
-            return;
-        }
-
-        if (result == null) {
-            Log.e(TAG, "TEST_PIXEL_SHORT_STREAK failed1");
-            saveTestResult(TestResultChecker.TEST_PIXEL_SHORT_STREAK, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_PIXEL_SHORT_STREAK, result);
-
-        boolean success = mTestResultChecker.checkPixelShortStreakTestResult(result);
-
-        if (success) {
-            Log.d(TAG, "TEST_PIXEL_SHORT_STREAK succeed");
-            saveTestResult(TestResultChecker.TEST_PIXEL_SHORT_STREAK, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "TEST_PIXEL_SHORT_STREAK failed2");
-            saveTestResult(TestResultChecker.TEST_PIXEL_SHORT_STREAK, TEST_ITEM_STATUS_FAILED);
-        }
-    }
-
-    private void onTestFWVersion(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "TEST_FW_VERSION end");
-
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (mTestStatus.get(TestResultChecker.TEST_FW_VERSION) != TEST_ITEM_STATUS_TESTING) {
-            return;
-        }
-
-        if (result == null) {
-            Log.e(TAG, "TEST_FW_VERSION failed1");
-            saveTestResult(TestResultChecker.TEST_FW_VERSION, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_FW_VERSION, result);
-
-        boolean success = mTestResultChecker.checkFwVersionTestResult(result);
-        if (success) {
-            Log.d(TAG, "TEST_FW_VERSION succeed");
-            saveTestResult(TestResultChecker.TEST_FW_VERSION, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "TEST_FW_VERSION failed2");
-            saveTestResult(TestResultChecker.TEST_FW_VERSION, TEST_ITEM_STATUS_FAILED);
-        }
-    }
-
     private void onTestBadPoint(final HashMap<Integer, Object> result) {
         Log.d(TAG, "TEST_BAD_POINT end");
 
@@ -445,37 +869,6 @@ public class TouchTestActivity extends Activity {
             Log.e(TAG, "TEST_BAD_POINT failed2");
             saveTestResult(TestResultChecker.TEST_BAD_POINT, TEST_ITEM_STATUS_FAILED);
         }
-    }
-
-    private void onTestPerformance(final HashMap<Integer, Object> result) {
-        Log.d(TAG, "TEST_PERFORMANCE end");
-
-        resetBioAssay();
-        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
-
-        if (mTestStatus
-                .get(TestResultChecker.TEST_PERFORMANCE) != TEST_ITEM_STATUS_WAIT_FINGER_INPUT) {
-            return;
-        }
-
-        if (result == null) {
-            Log.e(TAG, "TEST_PERFORMANCE failed1");
-            saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_FAILED);
-            return;
-        }
-
-        saveTestDetail(TestResultChecker.TEST_PERFORMANCE, result);
-
-        boolean success = mTestResultChecker.checkPerformanceTestResult(result);
-
-        if (success) {
-            Log.d(TAG, "TEST_PERFORMANCE succeed");
-            saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_SUCCEED);
-        } else {
-            Log.e(TAG, "TEST_PERFORMANCE failed2");
-            saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_FAILED);
-        }
-        mAdapter.notifyDataSetChanged();
     }
 
     private void onTestCapture(final HashMap<Integer, Object> result) {
@@ -543,85 +936,90 @@ public class TouchTestActivity extends Activity {
         mAdapter.notifyDataSetChanged();
     }
 
-    public void initView() {
-        if (TEST_ITEM == null) {
+    private void onTestFWVersion(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "TEST_FW_VERSION end");
+
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (mTestStatus.get(TestResultChecker.TEST_FW_VERSION) != TEST_ITEM_STATUS_TESTING) {
             return;
         }
 
-        for (Integer test_item : TEST_ITEM) {
-            mTestStatus.put(test_item, TEST_ITEM_STATUS_IDLE);
+        if (result == null) {
+            Log.e(TAG, "TEST_FW_VERSION failed1");
+            saveTestResult(TestResultChecker.TEST_FW_VERSION, TEST_ITEM_STATUS_FAILED);
+            return;
         }
 
-        mListView = (ListView) findViewById(R.id.listview);
-        mListView.setOnItemClickListener((parent, view, position, id) -> {
-            if (0 == mSensorValidityTestFlag) {
-                return;
-            }
+        saveTestDetail(TestResultChecker.TEST_FW_VERSION, result);
 
-            // header view
-            if (position == 0) {
-                Log.d(TAG, "onItemClick mAutoTest = " + mAutoTest);
-                if (mAutoTest) {
-                    if (mToast != null) {
-                        mToast.cancel();
-                    }
-                    mToast = Toast.makeText(TouchTestActivity.this, R.string.busy,
-                            Toast.LENGTH_SHORT);
-                    mToast.show();
-                } else {
-                    startAutoTest();
-                }
-                return;
-            }
-
-            if (position - 1 >= TEST_ITEM.length && mAutoTest) {
-                Log.d(TAG, "onItemClick mAutoTest = " + mAutoTest);
-                return;
-            }
-
-            mAutoTestPosition = position;
-            startTest(TEST_ITEM[position - 1]);
-        });
-
-        mListView.setAdapter(mAdapter);
-
-        View header = LayoutInflater.from(TouchTestActivity.this)
-                .inflate(R.layout.item_home, null, false);
-        if (null != header) {
-            header.findViewById(R.id.testing_normal).setVisibility(View.INVISIBLE);
+        boolean success = mTestResultChecker.checkFwVersionTestResult(result);
+        if (success) {
+            Log.d(TAG, "TEST_FW_VERSION succeed");
+            saveTestResult(TestResultChecker.TEST_FW_VERSION, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "TEST_FW_VERSION failed2");
+            saveTestResult(TestResultChecker.TEST_FW_VERSION, TEST_ITEM_STATUS_FAILED);
         }
-
-        mAutoTestingTitleView = (TextView) header.findViewById(R.id.test_title);
-        mAutoTestingTitleView.setText(R.string.test_auto);
-
-        mAutoTestingView = (TextView) header.findViewById(R.id.test_result);
-        mAutoTestingView.setText(R.string.testing);
-        mAutoTestingView.setVisibility(View.INVISIBLE);
-        mListView.addHeaderView(header);
     }
 
-    private void getTimeout() {
-        try {
-            Class<?> systemPropertiesClazz = Class.forName("android.os.SystemProperties");
-            Method method = systemPropertiesClazz.getMethod("getLong", new Class[]{
-                    String.class, long.class
-            });
-            mAutoTestTimeout = (Long) method.invoke(null, new Object[]{
-                    Constants.PROPERTY_TEST_ITME_TIMEOUT,
-                    Constants.TEST_TIMEOUT_MS
-            });
-            Log.i(TAG, "getTimeout mAutoTestTimeout = " + mAutoTestTimeout);
-        } catch (ClassNotFoundException e) {
-            Log.e(TAG, "ClassNotFoundException");
-        } catch (NoSuchMethodException e) {
-            Log.e(TAG, "NoSuchMethodException");
-        } catch (IllegalAccessException e) {
-            Log.e(TAG, "IllegalAccessException");
-        } catch (IllegalArgumentException e) {
-            Log.e(TAG, "IllegalArgumentException");
-        } catch (InvocationTargetException e) {
-            Log.e(TAG, "InvocationTargetException");
+    private void onTestSensorShortStreak(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "TEST_PIXEL_SHORT_STREAK end");
+
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (mTestStatus.get(TestResultChecker.TEST_PIXEL_SHORT_STREAK) != TEST_ITEM_STATUS_TESTING) {
+            return;
         }
+
+        if (result == null) {
+            Log.e(TAG, "TEST_PIXEL_SHORT_STREAK failed1");
+            saveTestResult(TestResultChecker.TEST_PIXEL_SHORT_STREAK, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_PIXEL_SHORT_STREAK, result);
+
+        boolean success = mTestResultChecker.checkPixelShortStreakTestResult(result);
+
+        if (success) {
+            Log.d(TAG, "TEST_PIXEL_SHORT_STREAK succeed");
+            saveTestResult(TestResultChecker.TEST_PIXEL_SHORT_STREAK, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "TEST_PIXEL_SHORT_STREAK failed2");
+            saveTestResult(TestResultChecker.TEST_PIXEL_SHORT_STREAK, TEST_ITEM_STATUS_FAILED);
+        }
+    }
+
+    private void onTestPerformance(final HashMap<Integer, Object> result) {
+        Log.d(TAG, "TEST_PERFORMANCE end");
+
+        resetBioAssay();
+        mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
+
+        if (mTestStatus
+                .get(TestResultChecker.TEST_PERFORMANCE) != TEST_ITEM_STATUS_WAIT_FINGER_INPUT) {
+            return;
+        }
+
+        if (result == null) {
+            Log.e(TAG, "TEST_PERFORMANCE failed1");
+            saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_FAILED);
+            return;
+        }
+
+        saveTestDetail(TestResultChecker.TEST_PERFORMANCE, result);
+
+        boolean success = mTestResultChecker.checkPerformanceTestResult(result);
+
+        if (success) {
+            Log.d(TAG, "TEST_PERFORMANCE succeed");
+            saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_SUCCEED);
+        } else {
+            Log.e(TAG, "TEST_PERFORMANCE failed2");
+            saveTestResult(TestResultChecker.TEST_PERFORMANCE, TEST_ITEM_STATUS_FAILED);
+        }
+        mAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -760,17 +1158,6 @@ public class TouchTestActivity extends Activity {
         TestHistoryUtils.addDetail("time:"
                 + (System.currentTimeMillis() - mAutoTestPrevTestEndTime)
                 + "ms");
-    }
-
-    // dedicated patch function for TEST_BIO_ASSAY
-    private void saveTestDetail(int testId, HashMap<Integer, Object> result1,
-                                HashMap<Integer, Object> result2) {
-        if (testId == TestResultChecker.TEST_BIO_CALIBRATION
-                || testId == TestResultChecker.TEST_HBD_CALIBRATION) {
-            TestHistoryUtils.addDetail(testId, result1, result2);
-            TestHistoryUtils.addDetail("time:" + (System.currentTimeMillis() - mAutoTestPrevTestEndTime)
-                    + "ms");
-        }
     }
 
     private void enableBioAssay() {
@@ -1233,411 +1620,6 @@ public class TouchTestActivity extends Activity {
             }
         } else {
             mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL, null);
-        }
-    }
-
-    private class MyAdapter extends BaseAdapter {
-        private static final int ITEM_VIEW_TYPE_UNTRUSTED_NORMAL = 0;
-        private static final int ITEM_VIEW_TYPE_UNTRUSTED_ENROLL = 1;
-        private static final int ITEM_VIEW_TYPE_UNTRUSTED_AUTHENTICATED = 2;
-        private static final int ITEM_VIEW_TYPE_MAX = 3;
-
-        @Override
-        public int getCount() {
-            return TEST_ITEM.length;
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return position;
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public int getItemViewType(int position) {
-            int type;
-            switch (TEST_ITEM[position]) {
-                case TestResultChecker.TEST_UNTRUSTED_ENROLL:
-                    type = ITEM_VIEW_TYPE_UNTRUSTED_ENROLL;
-                    break;
-                case TestResultChecker.TEST_UNTRUSTED_AUTHENTICATE:
-                    type = ITEM_VIEW_TYPE_UNTRUSTED_AUTHENTICATED;
-                    break;
-                default:
-                    type = ITEM_VIEW_TYPE_UNTRUSTED_NORMAL;
-                    break;
-            }
-            return type;
-        }
-
-        @Override
-        public int getViewTypeCount() {
-            return ITEM_VIEW_TYPE_MAX;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            int type = getItemViewType(position);
-            Holder holder = null;
-
-            if (convertView == null) {
-                holder = new Holder();
-                convertView = LayoutInflater.from(TouchTestActivity.this).inflate(
-                        R.layout.item_home, null);
-                holder.titleView = (TextView) convertView.findViewById(R.id.test_title);
-                holder.resultView = (TextView) convertView.findViewById(R.id.test_result);
-                holder.testingViewNormal = (ProgressBar) convertView
-                        .findViewById(R.id.testing_normal);
-                holder.testingViewNormal.setVisibility(View.GONE);
-                holder.testingViewUntrustEnroll = (RelativeLayout) convertView
-                        .findViewById(R.id.testing_untrust_enroll);
-                holder.testingViewUntrustEnroll.setVisibility(View.VISIBLE);
-                holder.testingViewUntrustAuthenticate = (LinearLayout) convertView
-                        .findViewById(R.id.testing_untrust_authenticate);
-                holder.testingViewUntrustAuthenticate.setVisibility(View.GONE);
-                holder.progressBar = (HoloCircularProgressBar) convertView
-                        .findViewById(R.id.fingerprint_progress_bar);
-                holder.progressBar.setMax(PROGRESS_BAR_MAX);
-
-                switch (type) {
-                    case ITEM_VIEW_TYPE_UNTRUSTED_ENROLL: {
-                        final ImageView fingerprintAnimator = (ImageView) convertView
-                                .findViewById(R.id.fingerprint_animator_untrust_enroll);
-                        final AnimatedVectorDrawable iconAnimationDrawable = (AnimatedVectorDrawable) fingerprintAnimator
-                                .getDrawable();
-                        fingerprintAnimator.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                iconAnimationDrawable.start();
-                                fingerprintAnimator.removeCallbacks(this);
-                                fingerprintAnimator.postDelayed(this, 2000);
-                            }
-                        }, 2000);
-
-                        holder.iconAnimationDrawable = iconAnimationDrawable;
-                        break;
-                    }
-
-                    case ITEM_VIEW_TYPE_UNTRUSTED_AUTHENTICATED: {
-                        final ImageView fingerprintAnimator = (ImageView) convertView
-                                .findViewById(R.id.fingerprint_animator_untrust_authenticate);
-                        final AnimatedVectorDrawable iconAnimationDrawable = (AnimatedVectorDrawable) fingerprintAnimator
-                                .getDrawable();
-
-                        fingerprintAnimator.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                iconAnimationDrawable.start();
-                                fingerprintAnimator.removeCallbacks(this);
-                                fingerprintAnimator.postDelayed(this, 2000);
-                            }
-                        }, 2000);
-
-                        holder.iconAnimationDrawable = iconAnimationDrawable;
-                        holder.retryView = (TextView) convertView
-                                .findViewById(R.id.authenticate_retry_count);
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
-
-                convertView.setTag(holder);
-            } else {
-                holder = (Holder) convertView.getTag();
-            }
-
-            if (mSensorValidityTestFlag == 0) {
-                holder.titleView.setEnabled(false);
-            } else {
-                holder.titleView.setEnabled(true);
-            }
-
-            switch (TEST_ITEM[position]) {
-                case TestResultChecker.TEST_SPI:
-                    holder.titleView.setText(R.string.test_spi);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_PIXEL:
-                    if (mConfig != null
-                            && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
-                            || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES
-                            || mConfig.mChipSeries == Constants.GF_MILAN_A_SERIES
-                            || mConfig.mChipSeries == Constants.GF_MILAN_HV
-                            || mConfig.mChipSeries == Constants.GF_MILAN_AN_SERIES)) {
-                        holder.titleView.setText(R.string.test_pixel_open);
-                    } else {
-                        holder.titleView.setText(R.string.test_sensor);
-                    }
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_PIXEL_SHORT_STREAK:
-                    if (mConfig != null
-                            && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
-                            || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES
-                            || mConfig.mChipSeries == Constants.GF_MILAN_A_SERIES
-                            || mConfig.mChipSeries == Constants.GF_MILAN_HV
-                            || mConfig.mChipSeries == Constants.GF_MILAN_AN_SERIES)) {
-                        holder.titleView.setText(R.string.test_pixel_short_streak);
-                    } else {
-                        holder.titleView.setText(R.string.test_sensor);
-                    }
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_RESET_PIN:
-                    holder.titleView.setText(R.string.test_reset_pin);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_INTERRUPT_PIN:
-                    holder.titleView.setText(R.string.test_interrupt_pin);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_BAD_POINT:
-                    holder.titleView.setText(R.string.test_bad_point);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_PERFORMANCE:
-                    holder.titleView.setText(R.string.test_performance);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_CAPTURE:
-                    holder.titleView.setText(R.string.test_capture);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_ALGO:
-                    holder.titleView.setText(R.string.test_algo);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_BIO_CALIBRATION:
-                    holder.titleView.setText(R.string.test_bio_assay);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_HBD_CALIBRATION:
-                    holder.titleView.setText(R.string.test_hbd_feature);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_FW_VERSION:
-                    holder.titleView.setText(R.string.test_fw_version);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_RAWDATA_SATURATED:
-                    holder.titleView.setText(R.string.test_rawdata_saturated);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_UNTRUSTED_ENROLL:
-                    holder.titleView.setText(R.string.untrusted_enroll);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_UNTRUSTED_AUTHENTICATE:
-                    holder.titleView.setText(R.string.untrusted_authenticate);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_SENSOR_FINE:
-                    holder.titleView.setText(R.string.test_sensor_fine);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_FPC_MENU_KEY:
-                    holder.titleView.setText(R.string.fpc_menu_key_title);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_FPC_BACK_KEY:
-                    holder.titleView.setText(R.string.fpc_back_key_title);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_FPC_RING_KEY:
-                    holder.titleView.setText(R.string.fpc_ring_key_title);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_STABLE_FACTOR:
-                    holder.titleView.setText(R.string.test_stable_factor);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_TWILL_BADPOINT:
-                    holder.titleView.setText(R.string.test_twill_badpoint);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-
-                case TestResultChecker.TEST_SNR:
-                    holder.titleView.setText(R.string.snr_test);
-                    updateTestView(holder, type, mTestStatus.get(TEST_ITEM[position]));
-                    break;
-            }
-
-            return convertView;
-        }
-
-        private void updateHolderTestingView(Holder holder, int type, int visibility) {
-            if (ITEM_VIEW_TYPE_UNTRUSTED_NORMAL == type) {
-                holder.testingViewNormal.setVisibility(visibility);
-                holder.testingViewUntrustEnroll.setVisibility(View.GONE);
-                holder.testingViewUntrustAuthenticate.setVisibility(View.GONE);
-            } else if (ITEM_VIEW_TYPE_UNTRUSTED_ENROLL == type) {
-                holder.testingViewNormal.setVisibility(View.GONE);
-                holder.testingViewUntrustEnroll.setVisibility(visibility);
-                holder.testingViewUntrustAuthenticate.setVisibility(View.GONE);
-            } else if (ITEM_VIEW_TYPE_UNTRUSTED_AUTHENTICATED == type) {
-                holder.testingViewNormal.setVisibility(View.GONE);
-                holder.testingViewUntrustEnroll.setVisibility(View.GONE);
-                holder.testingViewUntrustAuthenticate.setVisibility(visibility);
-            }
-        }
-
-        private void updateTestView(Holder holder, int type, int status) {
-            switch (status) {
-                case TEST_ITEM_STATUS_IDLE:
-                    holder.resultView.setVisibility(View.INVISIBLE);
-                    updateHolderTestingView(holder, type, View.INVISIBLE);
-                    break;
-
-                case TEST_ITEM_STATUS_TESTING:
-                    holder.resultView.setVisibility(View.INVISIBLE);
-                    updateHolderTestingView(holder, type, View.VISIBLE);
-                    break;
-
-                case TEST_ITEM_STATUS_SUCCEED:
-                    holder.resultView.setVisibility(View.VISIBLE);
-                    updateHolderTestingView(holder, type, View.INVISIBLE);
-                    holder.resultView.setText(R.string.test_succeed);
-                    holder.resultView
-                            .setTextColor(getResources().getColor(R.color.test_succeed_color));
-                    break;
-
-                case TEST_ITEM_STATUS_FAILED:
-                    holder.resultView.setVisibility(View.VISIBLE);
-                    updateHolderTestingView(holder, type, View.INVISIBLE);
-                    holder.resultView.setText(R.string.test_failed);
-                    holder.resultView
-                            .setTextColor(getResources().getColor(R.color.test_failed_color));
-                    break;
-
-                case TEST_ITEM_STATUS_TIMEOUT:
-                    holder.resultView.setVisibility(View.VISIBLE);
-                    updateHolderTestingView(holder, type, View.INVISIBLE);
-                    holder.resultView.setText(R.string.timeout);
-                    holder.resultView
-                            .setTextColor(getResources().getColor(R.color.test_failed_color));
-                    break;
-
-                case TEST_ITEM_STATUS_CANCELED:
-                    holder.resultView.setVisibility(View.VISIBLE);
-                    updateHolderTestingView(holder, type, View.INVISIBLE);
-                    holder.resultView.setText(R.string.canceled);
-                    holder.resultView
-                            .setTextColor(getResources().getColor(R.color.test_failed_color));
-                    break;
-
-                case TEST_ITEM_STATUS_WAIT_FINGER_INPUT:
-                    holder.resultView.setVisibility(View.VISIBLE);
-                    holder.resultView.setText(R.string.normal_touch_sensor);
-                    holder.resultView.setTextColor(getResources().getColor(R.color.fg_color));
-                    updateHolderTestingView(holder, type, View.INVISIBLE);
-                    break;
-
-                case TEST_ITEM_STATUS_WAIT_TWILL_INPUT:
-                    holder.resultView.setVisibility(View.VISIBLE);
-                    holder.resultView.setText(R.string.snr_touch_sensor);
-                    holder.resultView.setTextColor(getResources().getColor(R.color.fg_color));
-                    updateHolderTestingView(holder, type, View.INVISIBLE);
-                    break;
-
-                case TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT:
-                    holder.resultView.setVisibility(View.VISIBLE);
-                    holder.resultView.setText(R.string.bad_point_touch_sensor);
-                    holder.resultView.setTextColor(getResources().getColor(R.color.fg_color));
-                    updateHolderTestingView(holder, type, View.INVISIBLE);
-                    break;
-
-                case TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT:
-                    holder.resultView.setVisibility(View.VISIBLE);
-                    holder.resultView.setText(R.string.real_finger_touch_sensor);
-                    holder.resultView.setTextColor(getResources().getColor(R.color.fg_color));
-                    updateHolderTestingView(holder, type, View.INVISIBLE);
-                    break;
-
-                case TEST_ITEM_STATUS_ENROLLING:
-                    holder.resultView.setVisibility(View.INVISIBLE);
-                    updateHolderTestingView(holder, type, View.VISIBLE);
-                    holder.iconAnimationDrawable.start();
-                    holder.progressBar.setProgress(PROGRESS_BAR_MAX
-                            * (mConfig.mEnrollingMinTemplates - mEnrollmentRemaining)
-                            / mEnrollmentSteps);
-                    break;
-
-                case TEST_ITEM_STATUS_AUTHENGICATING: {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(mFailedAttempts);
-                    sb.append("/");
-                    sb.append(MAX_FAILED_ATTEMPTS);
-                    holder.resultView.setVisibility(View.INVISIBLE);
-                    updateHolderTestingView(holder, type, View.VISIBLE);
-                    holder.iconAnimationDrawable.start();
-                    holder.retryView.setText(sb.toString());
-                    break;
-                }
-
-                case TEST_ITEM_STATUS_WAIT_FINGER_DOWN: {
-                    holder.resultView.setVisibility(View.VISIBLE);
-                    holder.resultView.setText(R.string.wait_finger_down_tip);
-                    holder.resultView.setTextColor(getResources().getColor(R.color.fg_color));
-                    updateHolderTestingView(holder, type, View.INVISIBLE);
-                    break;
-                }
-
-                case TEST_ITEM_STATUS_WAIT_FINGER_UP: {
-                    holder.resultView.setVisibility(View.VISIBLE);
-                    holder.resultView.setText(R.string.wait_finger_up_tip);
-                    holder.resultView.setTextColor(getResources().getColor(R.color.fg_color));
-                    updateHolderTestingView(holder, type, View.INVISIBLE);
-                    break;
-                }
-
-                case TEST_ITEM_STATUS_NO_SUPPORT: {
-                    holder.resultView.setVisibility(View.VISIBLE);
-                    holder.resultView.setText(R.string.test_no_support);
-                    holder.resultView.setTextColor(getResources().getColor(R.color.test_succeed_color));
-                    updateHolderTestingView(holder, type, View.INVISIBLE);
-                    break;
-                }
-
-                default:
-                    break;
-            }
-        }
-
-        private class Holder {
-            TextView titleView;
-            TextView resultView;
-            ProgressBar testingViewNormal;
-            RelativeLayout testingViewUntrustEnroll;
-            LinearLayout testingViewUntrustAuthenticate;
-            HoloCircularProgressBar progressBar;
-            AnimatedVectorDrawable iconAnimationDrawable;
-            TextView retryView;
         }
     }
 
