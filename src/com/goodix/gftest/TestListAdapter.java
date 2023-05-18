@@ -47,8 +47,6 @@ public class TestListAdapter extends BaseAdapter {
     private HashMap<Integer, Integer> mTestStatus;
 
     private int mFailedAttempts = 0;
-    private int mEnrollmentSteps = 8;
-    private int mEnrollmentRemaining = 8;
 
     public TestListAdapter(Context context, int[] TEST_ITEM, GFConfig config, HashMap<Integer, Integer> testStatus) {
         mContext = context;
@@ -157,39 +155,41 @@ public class TestListAdapter extends BaseAdapter {
             case TEST_ITEM_STATUS_IDLE:
                 holder.resultView.setVisibility(View.INVISIBLE);
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
-                Log.d("updateTestView", "TEST_ITEM_STATUS_IDLE" + status);
                 break;
-
             case TEST_ITEM_STATUS_TESTING:
                 holder.resultView.setVisibility(View.INVISIBLE);
                 holder.testingViewNormal.setVisibility(View.VISIBLE);
-                Log.d("updateTestView", "TEST_ITEM_STATUS_TESTING" + status);
                 break;
-
             case TEST_ITEM_STATUS_SUCCEED:
-                holder.resultView.setVisibility(View.VISIBLE);
-                holder.testingViewNormal.setVisibility(View.INVISIBLE);
                 holder.resultView.setText(R.string.test_succeed);
                 holder.resultView.setTextColor(mContext.getColor(R.color.test_succeed_color));
-                Log.d("updateTestView", "TEST_ITEM_STATUS_SUCCEED" + status);
-                break;
-
-            case TEST_ITEM_STATUS_FAILED:
                 holder.resultView.setVisibility(View.VISIBLE);
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
+                break;
+            case TEST_ITEM_STATUS_FAILED:
                 holder.resultView.setText(R.string.test_failed);
                 holder.resultView.setTextColor(mContext.getColor(R.color.test_failed_color));
-                Log.d("updateTestView", "TEST_ITEM_STATUS_FAILED" + status);
-                break;
-
-            case TEST_ITEM_STATUS_TIMEOUT:
                 holder.resultView.setVisibility(View.VISIBLE);
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
+                break;
+            case TEST_ITEM_STATUS_TIMEOUT:
                 holder.resultView.setText(R.string.timeout);
                 holder.resultView.setTextColor(mContext.getColor(R.color.test_failed_color));
-                Log.d("updateTestView", "TEST_ITEM_STATUS_TIMEOUT" + status);
+                holder.resultView.setVisibility(View.VISIBLE);
+                holder.testingViewNormal.setVisibility(View.INVISIBLE);
                 break;
-
+            case TEST_ITEM_STATUS_WAIT_FINGER_INPUT:
+                holder.resultView.setText(R.string.normal_touch_sensor);
+                holder.resultView.setTextColor(mContext.getColor(R.color.fg_color));
+                holder.resultView.setVisibility(View.VISIBLE);
+                holder.testingViewNormal.setVisibility(View.INVISIBLE);
+                break;
+            case TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT:
+                holder.resultView.setText(R.string.bad_point_touch_sensor);
+                holder.resultView.setTextColor(mContext.getColor(R.color.fg_color));
+                holder.resultView.setVisibility(View.VISIBLE);
+                holder.testingViewNormal.setVisibility(View.INVISIBLE);
+                break;
             case TEST_ITEM_STATUS_CANCELED:
                 holder.resultView.setVisibility(View.VISIBLE);
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
@@ -197,15 +197,6 @@ public class TestListAdapter extends BaseAdapter {
                 holder.resultView.setTextColor(mContext.getColor(R.color.test_failed_color));
                 Log.d("updateTestView", "TEST_ITEM_STATUS_CANCELED" + status);
                 break;
-
-            case TEST_ITEM_STATUS_WAIT_FINGER_INPUT:
-                holder.resultView.setVisibility(View.VISIBLE);
-                holder.resultView.setText(R.string.normal_touch_sensor);
-                holder.resultView.setTextColor(mContext.getColor(R.color.fg_color));
-                holder.testingViewNormal.setVisibility(View.INVISIBLE);
-                Log.d("updateTestView", "TEST_ITEM_STATUS_WAIT_FINGER_INPUT" + status);
-                break;
-
             case TEST_ITEM_STATUS_WAIT_TWILL_INPUT:
                 holder.resultView.setVisibility(View.VISIBLE);
                 holder.resultView.setText(R.string.snr_touch_sensor);
@@ -213,15 +204,6 @@ public class TestListAdapter extends BaseAdapter {
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
                 Log.d("updateTestView", "TEST_ITEM_STATUS_WAIT_TWILL_INPUT" + status);
                 break;
-
-            case TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT:
-                holder.resultView.setVisibility(View.VISIBLE);
-                holder.resultView.setText(R.string.bad_point_touch_sensor);
-                holder.resultView.setTextColor(mContext.getColor(R.color.fg_color));
-                holder.testingViewNormal.setVisibility(View.INVISIBLE);
-                Log.d("updateTestView", "TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT" + status);
-                break;
-
             case TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT:
                 holder.resultView.setVisibility(View.VISIBLE);
                 holder.resultView.setText(R.string.real_finger_touch_sensor);
@@ -229,20 +211,14 @@ public class TestListAdapter extends BaseAdapter {
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
                 Log.d("updateTestView", "TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT" + status);
                 break;
-
             case TEST_ITEM_STATUS_ENROLLING:
                 holder.resultView.setVisibility(View.INVISIBLE);
                 holder.testingViewNormal.setVisibility(View.VISIBLE);
                 holder.iconAnimationDrawable.start();
                 // set default enrolling min templates
-                mEnrollmentSteps = mConfig.mEnrollingMinTemplates;
-                mEnrollmentRemaining = mEnrollmentSteps;
-                holder.progressBar.setProgress(PROGRESS_BAR_MAX
-                        * (mConfig.mEnrollingMinTemplates - mEnrollmentRemaining)
-                        / mEnrollmentSteps);
+                holder.progressBar.setProgress(PROGRESS_BAR_MAX * 0);
                 Log.d("updateTestView", "TEST_ITEM_STATUS_ENROLLING" + status);
                 break;
-
             case TEST_ITEM_STATUS_AUTHENGICATING: {
                 StringBuilder sb = new StringBuilder();
                 sb.append(mFailedAttempts);
@@ -255,7 +231,6 @@ public class TestListAdapter extends BaseAdapter {
                 Log.d("updateTestView", "TEST_ITEM_STATUS_AUTHENGICATING" + status);
                 break;
             }
-
             case TEST_ITEM_STATUS_WAIT_FINGER_DOWN: {
                 holder.resultView.setVisibility(View.VISIBLE);
                 holder.resultView.setText(R.string.wait_finger_down_tip);
@@ -264,7 +239,6 @@ public class TestListAdapter extends BaseAdapter {
                 Log.d("updateTestView", "TEST_ITEM_STATUS_WAIT_FINGER_DOWN" + status);
                 break;
             }
-
             case TEST_ITEM_STATUS_WAIT_FINGER_UP: {
                 holder.resultView.setVisibility(View.VISIBLE);
                 holder.resultView.setText(R.string.wait_finger_up_tip);
@@ -273,7 +247,6 @@ public class TestListAdapter extends BaseAdapter {
                 Log.d("updateTestView", "TEST_ITEM_STATUS_WAIT_FINGER_UP" + status);
                 break;
             }
-
             case TEST_ITEM_STATUS_NO_SUPPORT: {
                 holder.resultView.setVisibility(View.VISIBLE);
                 holder.resultView.setText(R.string.test_no_support);
@@ -282,7 +255,6 @@ public class TestListAdapter extends BaseAdapter {
                 Log.d("updateTestView", "TEST_ITEM_STATUS_NO_SUPPORT" + status);
                 break;
             }
-
             default:
                 break;
         }
