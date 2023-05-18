@@ -6,12 +6,9 @@ package com.goodix.gftest;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.os.Bundle;
-import android.os.CancellationSignal;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Gravity;
@@ -85,35 +82,28 @@ public class TouchTestActivity extends Activity {
     private TextView mAutoTestingView;
     private TextView mAutoTestingTitleView;
 
-    private ProgressDialog mDialog;
     private Toast mToast;
     private static int[] TEST_ITEM;
+
+    private GoodixFingerprintManager mGoodixFingerprintManager;
+    private GFConfig mConfig;
+
+    private Checker mTestResultChecker;
 
     private HashMap<Integer, Integer> mTestStatus = new HashMap();
 
     private Handler mHandler = new Handler();
 
-    private boolean mIsSensorValidityTested = true;
     private int mSensorValidityTestFlag = 1;
     private boolean mAutoTest = false;
     private int mAutoTestPosition = 0;
 
     private long mAutoTestTimeout = Constants.TEST_TIMEOUT_MS;
 
-    private long mAutoTestStartTime = 0;
-    private long mAutoTestPrevTestEndTime = 0;
-
-    private GoodixFingerprintManager mGoodixFingerprintManager;
-    private GFConfig mConfig;
     private int mEnrollmentSteps = 8;
     private int mEnrollmentRemaining = 8;
 
     private int mFailedAttempts = 0;
-
-    private CancellationSignal mEnrollmentCancel;
-    private CancellationSignal mAuthenticationCancel;
-
-    private Checker mTestResultChecker;
 
     private class MyAdapter extends BaseAdapter {
         private static final int ITEM_VIEW_TYPE_UNTRUSTED_NORMAL = 0;
@@ -561,28 +551,6 @@ public class TouchTestActivity extends Activity {
                         TestHistoryUtils.init(getFilesDir().getPath(), "testtool.txt",
                                 "testdetail.txt");
 
-                        if (null != mConfig && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
-                                || Constants.GF_MILAN_HV == mConfig.mChipSeries
-                                || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES)) {
-                            Log.d(TAG, "TEST_CHECK_SENSOR_TEST_INFO start");
-                            if (mIsSensorValidityTested == false) {
-                                mSensorValidityTestFlag = 0;
-                                mAutoTestingTitleView.setEnabled(false);
-                                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_SENSOR_VALIDITY);
-                                mDialog = new ProgressDialog(TouchTestActivity.this);
-                                mDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                                mDialog.setCancelable(true);
-                                mDialog.setCanceledOnTouchOutside(false);
-                                mDialog.setMessage(TouchTestActivity.this.getString(R.string.sensor_checking));
-                                mDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                                    @Override
-                                    public void onCancel(DialogInterface dialog) {
-                                    }
-                                });
-                                mDialog.show();
-                            }
-                        }
-
                         //if can't get sensor chip_id ,no need to start runnable
                         if (TEST_ITEM != null) {
                             getTimeout();
@@ -646,7 +614,7 @@ public class TouchTestActivity extends Activity {
             mTestStatus.put(test_item, TEST_ITEM_STATUS_IDLE);
         }
 
-        mListView = (ListView) findViewById(R.id.listview);
+        mListView = findViewById(R.id.listview);
         mListView.setOnItemClickListener((parent, view, position, id) -> {
             if (0 == mSensorValidityTestFlag) {
                 return;
@@ -707,8 +675,6 @@ public class TouchTestActivity extends Activity {
         }
         mAdapter.notifyDataSetChanged();
 
-        mAutoTestStartTime = System.currentTimeMillis();
-        mAutoTestPrevTestEndTime = mAutoTestStartTime;
         mAutoTestPosition = 0;
 
         startTest(TEST_ITEM[mAutoTestPosition]);
@@ -738,9 +704,6 @@ public class TouchTestActivity extends Activity {
             }
         }
 
-        if (mAutoTestPrevTestEndTime == 0) {
-            mAutoTestStartTime = System.currentTimeMillis();
-        }
         switch (testCmd) {
             case TestResultChecker.TEST_SPI:
                 Log.d(TAG, "TEST_SPI start");
@@ -876,7 +839,6 @@ public class TouchTestActivity extends Activity {
             }
 
             if (mAutoTestPosition < mAdapter.getCount() && !canceled/* && !timeout && !failed */) {
-                mAutoTestPrevTestEndTime = System.currentTimeMillis();
                 if (TestResultChecker.TEST_UNTRUSTED_AUTHENTICATE == TEST_ITEM[mAutoTestPosition]
                         && !mGoodixFingerprintManager.hasEnrolledUntrustedFingerprint()) {
                     mTestStatus.put(TestResultChecker.TEST_UNTRUSTED_AUTHENTICATE,
@@ -1205,27 +1167,6 @@ public class TouchTestActivity extends Activity {
         super.onResume();
         Log.d(TAG, "onResume start");
 
-        if (null != mConfig && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
-                || Constants.GF_MILAN_HV == mConfig.mChipSeries || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES)) {
-            Log.d(TAG, "TEST_CHECK_SENSOR_TEST_INFO start");
-            if (mIsSensorValidityTested == false) {
-                mSensorValidityTestFlag = 0;
-                mAutoTestingTitleView.setEnabled(false);
-                mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_SENSOR_VALIDITY);
-                mDialog = new ProgressDialog(this);
-                mDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                mDialog.setCancelable(true);
-                mDialog.setCanceledOnTouchOutside(false);
-                mDialog.setMessage(TouchTestActivity.this.getString(R.string.sensor_checking));
-                mDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-                    }
-                });
-                mDialog.show();
-            }
-        }
-
         //if can't get sensor chip_id ,no need to start runnable
         if (TEST_ITEM != null) {
             getTimeout();
@@ -1236,20 +1177,8 @@ public class TouchTestActivity extends Activity {
     protected void onPause() {
         super.onPause();
 
-        if (mEnrollmentCancel != null && !mEnrollmentCancel.isCanceled()) {
-            mEnrollmentCancel.cancel();
-            mEnrollmentCancel = null;
-            saveTestResult(TestResultChecker.TEST_UNTRUSTED_ENROLL, TEST_ITEM_STATUS_CANCELED);
-            mAdapter.notifyDataSetChanged();
-        } else if (mAuthenticationCancel != null && !mAuthenticationCancel.isCanceled()) {
-            mAuthenticationCancel.cancel();
-            mAuthenticationCancel = null;
-            saveTestResult(TestResultChecker.TEST_UNTRUSTED_AUTHENTICATE, TEST_ITEM_STATUS_CANCELED);
-            mAdapter.notifyDataSetChanged();
-        } else {
-            stopTest(TEST_ITEM_STATUS_CANCELED);
-            mAdapter.notifyDataSetChanged();
-        }
+        stopTest(TEST_ITEM_STATUS_CANCELED);
+        mAdapter.notifyDataSetChanged();
 
         if (mGoodixFingerprintManager.hasEnrolledUntrustedFingerprint()) {
             mGoodixFingerprintManager.untrustedRemove(new UntrustedRemovalCallback() {
@@ -1319,16 +1248,6 @@ public class TouchTestActivity extends Activity {
                 resetBioAssay();
                 if (TestResultChecker.TEST_SPI == test_item) {
                     mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_PRIOR_CANCEL);
-                } else if (TestResultChecker.TEST_UNTRUSTED_ENROLL == test_item) {
-                    if (mEnrollmentCancel != null && !mEnrollmentCancel.isCanceled()) {
-                        mEnrollmentCancel.cancel();
-                        mEnrollmentCancel = null;
-                    }
-                } else if (TestResultChecker.TEST_UNTRUSTED_AUTHENTICATE == test_item) {
-                    if (mAuthenticationCancel != null && !mAuthenticationCancel.isCanceled()) {
-                        mAuthenticationCancel.cancel();
-                        mAuthenticationCancel = null;
-                    }
                 } else {
                     mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
                 }
