@@ -872,6 +872,14 @@ public class TouchTestActivity extends Activity {
         }
     }
 
+    private void saveTestResult(int testId, int reason) {
+        mTestStatus.put(testId, reason);
+
+        mAdapter.notifyDataSetChanged();
+        mHandler.removeCallbacks(mTimeoutRunnable);
+        autoNextTest();
+    }
+
     private void onTestResetPin(final HashMap<Integer, Object> result) {
         Log.d(TAG, "TEST_RESET_PIN end");
         mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL);
@@ -1255,23 +1263,17 @@ public class TouchTestActivity extends Activity {
                     case TestResultChecker.TEST_SPI:
                         Log.d(TAG, "TEST_SPI " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
-                    case TestResultChecker.TEST_PIXEL:
-                        Log.d(TAG, "TEST_PIXEL " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
-                        break;
-                    case TestResultChecker.TEST_PIXEL_SHORT_STREAK:
-                        Log.d(TAG, "TEST_PIXEL_SHORT_STREAK " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
-                        break;
                     case TestResultChecker.TEST_RESET_PIN:
                         Log.d(TAG, "TEST_RESET_PIN " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
                     case TestResultChecker.TEST_INTERRUPT_PIN:
                         Log.d(TAG, "TEST_INTERRUPT_PIN " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
+                    case TestResultChecker.TEST_PIXEL:
+                        Log.d(TAG, "TEST_PIXEL " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
+                        break;
                     case TestResultChecker.TEST_BAD_POINT:
                         Log.d(TAG, "TEST_BAD_POINT " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
-                        break;
-                    case TestResultChecker.TEST_PERFORMANCE:
-                        Log.d(TAG, "TEST_PERFORMANCE " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
                     case TestResultChecker.TEST_CAPTURE:
                         Log.d(TAG, "TEST_CAPTURE " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
@@ -1279,67 +1281,14 @@ public class TouchTestActivity extends Activity {
                     case TestResultChecker.TEST_ALGO:
                         Log.d(TAG, "TEST_ALGO " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
-                    case TestResultChecker.TEST_BIO_CALIBRATION:
-                        Log.d(TAG, "TEST_BIO_CALIBRATION " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
-                        break;
-                    case TestResultChecker.TEST_HBD_CALIBRATION:
-                        Log.d(TAG, "TEST_HBD_CALIBRATION " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
-                        break;
                     case TestResultChecker.TEST_FW_VERSION:
                         Log.d(TAG, "TEST_FW_VERSION " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
-
-                    case TestResultChecker.TEST_RAWDATA_SATURATED:
-                        Log.d(TAG, "TEST_RAWDATA_SATURATED "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
+                    case TestResultChecker.TEST_PIXEL_SHORT_STREAK:
+                        Log.d(TAG, "TEST_PIXEL_SHORT_STREAK " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
-
-                    case TestResultChecker.TEST_UNTRUSTED_ENROLL:
-                        Log.d(TAG, "TEST_UNTRUSTED_ENROLL "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
-                        break;
-
-                    case TestResultChecker.TEST_UNTRUSTED_AUTHENTICATE:
-                        Log.d(TAG, "TEST_UNTRUSTED_AUTHENTICATE "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
-                        break;
-
-                    case TestResultChecker.TEST_SENSOR_FINE:
-                        Log.d(TAG, "TEST_SENSOR_FINE "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
-                        break;
-
-                    case TestResultChecker.TEST_FPC_MENU_KEY:
-                        Log.d(TAG, "TEST_FPC_MENU_KEY "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
-                        saveTestResultOnly(test_item, reason);
-                        break;
-
-                    case TestResultChecker.TEST_FPC_BACK_KEY:
-                        Log.d(TAG, "TEST_FPC_BACK_KEY "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
-                        saveTestResultOnly(test_item, reason);
-                        break;
-
-                    case TestResultChecker.TEST_FPC_RING_KEY:
-                        Log.d(TAG, "TEST_FPC_RING_KEY "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
-                        saveTestResultOnly(test_item, reason);
-                        break;
-
-                    case TestResultChecker.TEST_STABLE_FACTOR:
-                        Log.d(TAG, "TEST_STABLE_FACTOR "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
-                        break;
-
-                    case TestResultChecker.TEST_TWILL_BADPOINT:
-                        Log.d(TAG, "TEST_TWILL_BADPOINT "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
-                        break;
-
-                    case TestResultChecker.TEST_SNR:
-                        Log.d(TAG, "TEST_SNR "
-                                + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
+                    case TestResultChecker.TEST_PERFORMANCE:
+                        Log.d(TAG, "TEST_PERFORMANCE " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
                         break;
                 }
 
@@ -1381,39 +1330,7 @@ public class TouchTestActivity extends Activity {
         mGoodixFingerprintManager.unregisterTestCmdCallback(mTestCmdCallback);
     }
 
-    private void saveTestResult(int testId, int reason) {
-        mTestStatus.put(testId, reason);
-        if (reason == TEST_ITEM_STATUS_TIMEOUT) {
-            TestHistoryUtils.addResult(testId, "result=TIMEOUT");
-        } else if (reason == TEST_ITEM_STATUS_CANCELED) {
-            TestHistoryUtils.addResult(testId, "result=CANCELED");
-        } else if (reason == TEST_ITEM_STATUS_FAILED) {
-            TestHistoryUtils.addResult(testId, "result=FAILED");
-        } else if (reason == TEST_ITEM_STATUS_SUCCEED) {
-            TestHistoryUtils.addResult(testId, "result=SUCCEED");
-        } else if (reason == TEST_ITEM_STATUS_NO_SUPPORT) {
-            TestHistoryUtils.addResult(testId, "result=NO SUPPORT");
-        }
 
-        mAdapter.notifyDataSetChanged();
-        mHandler.removeCallbacks(mTimeoutRunnable);
-        autoNextTest();
-    }
-
-    private void saveTestResultOnly(int testId, int reason) {
-        mTestStatus.put(testId, reason);
-        if (reason == TEST_ITEM_STATUS_TIMEOUT) {
-            TestHistoryUtils.addResult(testId, "result=TIMEOUT");
-        } else if (reason == TEST_ITEM_STATUS_CANCELED) {
-            TestHistoryUtils.addResult(testId, "result=CANCELED");
-        } else if (reason == TEST_ITEM_STATUS_FAILED) {
-            TestHistoryUtils.addResult(testId, "result=FAILED");
-        } else if (reason == TEST_ITEM_STATUS_SUCCEED) {
-            TestHistoryUtils.addResult(testId, "result=SUCCEED");
-        } else if (reason == TEST_ITEM_STATUS_NO_SUPPORT) {
-            TestHistoryUtils.addResult(testId, "result=NO SUPPORT");
-        }
-    }
 
     private void saveTestDetail(int testId, HashMap<Integer, Object> result) {
         TestHistoryUtils.addDetail(testId, result);
@@ -1449,8 +1366,6 @@ public class TouchTestActivity extends Activity {
                 Log.d(TAG, "autoNextTest mAutoTestPosition = " + mAutoTestPosition);
             } else {
                 mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_CANCEL, null);
-
-                checkResult();
 
                 mAutoTest = false;
                 Log.d(TAG, "autoNextTest mAutoTest = " + mAutoTest);
@@ -1548,29 +1463,6 @@ public class TouchTestActivity extends Activity {
     private void startTestBioCalibration() {
         mHandler.removeCallbacks(mCheckFingerDownRunnable);
         mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_BIO_CALIBRATION);
-    }
-
-    private void checkResult() {
-        if (!mAutoTest) {
-            return;
-        }
-
-        boolean allSuccess = true;
-        for (Integer test_item : TEST_ITEM) {
-            if (mTestStatus.get(test_item) != TEST_ITEM_STATUS_SUCCEED) {
-                allSuccess = false;
-                break;
-            }
-        }
-
-        if (allSuccess) {
-            TestHistoryUtils.addResult("pass");
-        } else {
-            TestHistoryUtils.addResult("fail");
-        }
-        TestHistoryUtils.addResult("total time:"
-                + (System.currentTimeMillis() - mAutoTestStartTime)
-                + "ms");
     }
 
     private Runnable mTimeoutRunnable = () -> stopTest(TEST_ITEM_STATUS_TIMEOUT);
