@@ -253,7 +253,6 @@ public class TouchTestActivity extends Activity {
     }
 
     private boolean startTest(int testCmd) {
-        byte[] fpcKeyType = new byte[1];
         Log.d(TAG, "startTest cmd: " + testCmd);
         for (Integer test_item : TEST_ITEM) {
             if (mTestStatus.get(test_item) == TEST_ITEM_STATUS_TESTING

@@ -2,6 +2,7 @@ package com.goodix.gftest;
 
 import android.content.Context;
 import android.graphics.drawable.AnimatedVectorDrawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -88,15 +89,19 @@ public class TestListAdapter extends BaseAdapter {
         } else {
             holder = (Holder) convertView.getTag();
         }
-
-        holder.titleView.setEnabled(true);
-
         switch (TEST_ITEM[position]) {
             case TestResultChecker.TEST_SPI:
                 holder.titleView.setText(R.string.test_spi);
                 updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
                 break;
-
+            case TestResultChecker.TEST_RESET_PIN:
+                holder.titleView.setText(R.string.test_reset_pin);
+                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
+                break;
+            case TestResultChecker.TEST_INTERRUPT_PIN:
+                holder.titleView.setText(R.string.test_interrupt_pin);
+                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
+                break;
             case TestResultChecker.TEST_PIXEL:
                 if (mConfig != null && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
                         || mConfig.mChipSeries == Constants.GF_DUBAI_A_SERIES
@@ -109,7 +114,22 @@ public class TestListAdapter extends BaseAdapter {
                 }
                 updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
                 break;
-
+            case TestResultChecker.TEST_BAD_POINT:
+                holder.titleView.setText(R.string.test_bad_point);
+                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
+                break;
+            case TestResultChecker.TEST_CAPTURE:
+                holder.titleView.setText(R.string.test_capture);
+                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
+                break;
+            case TestResultChecker.TEST_ALGO:
+                holder.titleView.setText(R.string.test_algo);
+                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
+                break;
+            case TestResultChecker.TEST_FW_VERSION:
+                holder.titleView.setText(R.string.test_fw_version);
+                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
+                break;
             case TestResultChecker.TEST_PIXEL_SHORT_STREAK:
                 if (mConfig != null
                         && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
@@ -123,99 +143,8 @@ public class TestListAdapter extends BaseAdapter {
                 }
                 updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
                 break;
-
-            case TestResultChecker.TEST_RESET_PIN:
-                holder.titleView.setText(R.string.test_reset_pin);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_INTERRUPT_PIN:
-                holder.titleView.setText(R.string.test_interrupt_pin);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_BAD_POINT:
-                holder.titleView.setText(R.string.test_bad_point);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
             case TestResultChecker.TEST_PERFORMANCE:
                 holder.titleView.setText(R.string.test_performance);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_CAPTURE:
-                holder.titleView.setText(R.string.test_capture);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_ALGO:
-                holder.titleView.setText(R.string.test_algo);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_BIO_CALIBRATION:
-                holder.titleView.setText(R.string.test_bio_assay);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_HBD_CALIBRATION:
-                holder.titleView.setText(R.string.test_hbd_feature);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_FW_VERSION:
-                holder.titleView.setText(R.string.test_fw_version);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_RAWDATA_SATURATED:
-                holder.titleView.setText(R.string.test_rawdata_saturated);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_UNTRUSTED_ENROLL:
-                holder.titleView.setText(R.string.untrusted_enroll);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_UNTRUSTED_AUTHENTICATE:
-                holder.titleView.setText(R.string.untrusted_authenticate);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_SENSOR_FINE:
-                holder.titleView.setText(R.string.test_sensor_fine);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_FPC_MENU_KEY:
-                holder.titleView.setText(R.string.fpc_menu_key_title);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_FPC_BACK_KEY:
-                holder.titleView.setText(R.string.fpc_back_key_title);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_FPC_RING_KEY:
-                holder.titleView.setText(R.string.fpc_ring_key_title);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_STABLE_FACTOR:
-                holder.titleView.setText(R.string.test_stable_factor);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_TWILL_BADPOINT:
-                holder.titleView.setText(R.string.test_twill_badpoint);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
-                break;
-
-            case TestResultChecker.TEST_SNR:
-                holder.titleView.setText(R.string.snr_test);
                 updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
                 break;
         }
@@ -228,11 +157,13 @@ public class TestListAdapter extends BaseAdapter {
             case TEST_ITEM_STATUS_IDLE:
                 holder.resultView.setVisibility(View.INVISIBLE);
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
+                Log.d("updateTestView", "TEST_ITEM_STATUS_IDLE" + status);
                 break;
 
             case TEST_ITEM_STATUS_TESTING:
                 holder.resultView.setVisibility(View.INVISIBLE);
                 holder.testingViewNormal.setVisibility(View.VISIBLE);
+                Log.d("updateTestView", "TEST_ITEM_STATUS_TESTING" + status);
                 break;
 
             case TEST_ITEM_STATUS_SUCCEED:
@@ -240,6 +171,7 @@ public class TestListAdapter extends BaseAdapter {
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
                 holder.resultView.setText(R.string.test_succeed);
                 holder.resultView.setTextColor(mContext.getColor(R.color.test_succeed_color));
+                Log.d("updateTestView", "TEST_ITEM_STATUS_SUCCEED" + status);
                 break;
 
             case TEST_ITEM_STATUS_FAILED:
@@ -247,6 +179,7 @@ public class TestListAdapter extends BaseAdapter {
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
                 holder.resultView.setText(R.string.test_failed);
                 holder.resultView.setTextColor(mContext.getColor(R.color.test_failed_color));
+                Log.d("updateTestView", "TEST_ITEM_STATUS_FAILED" + status);
                 break;
 
             case TEST_ITEM_STATUS_TIMEOUT:
@@ -254,6 +187,7 @@ public class TestListAdapter extends BaseAdapter {
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
                 holder.resultView.setText(R.string.timeout);
                 holder.resultView.setTextColor(mContext.getColor(R.color.test_failed_color));
+                Log.d("updateTestView", "TEST_ITEM_STATUS_TIMEOUT" + status);
                 break;
 
             case TEST_ITEM_STATUS_CANCELED:
@@ -261,6 +195,7 @@ public class TestListAdapter extends BaseAdapter {
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
                 holder.resultView.setText(R.string.canceled);
                 holder.resultView.setTextColor(mContext.getColor(R.color.test_failed_color));
+                Log.d("updateTestView", "TEST_ITEM_STATUS_CANCELED" + status);
                 break;
 
             case TEST_ITEM_STATUS_WAIT_FINGER_INPUT:
@@ -268,6 +203,7 @@ public class TestListAdapter extends BaseAdapter {
                 holder.resultView.setText(R.string.normal_touch_sensor);
                 holder.resultView.setTextColor(mContext.getColor(R.color.fg_color));
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
+                Log.d("updateTestView", "TEST_ITEM_STATUS_WAIT_FINGER_INPUT" + status);
                 break;
 
             case TEST_ITEM_STATUS_WAIT_TWILL_INPUT:
@@ -275,6 +211,7 @@ public class TestListAdapter extends BaseAdapter {
                 holder.resultView.setText(R.string.snr_touch_sensor);
                 holder.resultView.setTextColor(mContext.getColor(R.color.fg_color));
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
+                Log.d("updateTestView", "TEST_ITEM_STATUS_WAIT_TWILL_INPUT" + status);
                 break;
 
             case TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT:
@@ -282,6 +219,7 @@ public class TestListAdapter extends BaseAdapter {
                 holder.resultView.setText(R.string.bad_point_touch_sensor);
                 holder.resultView.setTextColor(mContext.getColor(R.color.fg_color));
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
+                Log.d("updateTestView", "TEST_ITEM_STATUS_WAIT_BAD_POINT_INPUT" + status);
                 break;
 
             case TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT:
@@ -289,6 +227,7 @@ public class TestListAdapter extends BaseAdapter {
                 holder.resultView.setText(R.string.real_finger_touch_sensor);
                 holder.resultView.setTextColor(mContext.getColor(R.color.fg_color));
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
+                Log.d("updateTestView", "TEST_ITEM_STATUS_WAIT_REAL_FINGER_INPUT" + status);
                 break;
 
             case TEST_ITEM_STATUS_ENROLLING:
@@ -301,6 +240,7 @@ public class TestListAdapter extends BaseAdapter {
                 holder.progressBar.setProgress(PROGRESS_BAR_MAX
                         * (mConfig.mEnrollingMinTemplates - mEnrollmentRemaining)
                         / mEnrollmentSteps);
+                Log.d("updateTestView", "TEST_ITEM_STATUS_ENROLLING" + status);
                 break;
 
             case TEST_ITEM_STATUS_AUTHENGICATING: {
@@ -312,6 +252,7 @@ public class TestListAdapter extends BaseAdapter {
                 holder.testingViewNormal.setVisibility(View.VISIBLE);
                 holder.iconAnimationDrawable.start();
                 holder.retryView.setText(sb.toString());
+                Log.d("updateTestView", "TEST_ITEM_STATUS_AUTHENGICATING" + status);
                 break;
             }
 
@@ -320,6 +261,7 @@ public class TestListAdapter extends BaseAdapter {
                 holder.resultView.setText(R.string.wait_finger_down_tip);
                 holder.resultView.setTextColor(mContext.getColor(R.color.fg_color));
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
+                Log.d("updateTestView", "TEST_ITEM_STATUS_WAIT_FINGER_DOWN" + status);
                 break;
             }
 
@@ -328,6 +270,7 @@ public class TestListAdapter extends BaseAdapter {
                 holder.resultView.setText(R.string.wait_finger_up_tip);
                 holder.resultView.setTextColor(mContext.getColor(R.color.fg_color));
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
+                Log.d("updateTestView", "TEST_ITEM_STATUS_WAIT_FINGER_UP" + status);
                 break;
             }
 
@@ -336,6 +279,7 @@ public class TestListAdapter extends BaseAdapter {
                 holder.resultView.setText(R.string.test_no_support);
                 holder.resultView.setTextColor(mContext.getColor(R.color.test_succeed_color));
                 holder.testingViewNormal.setVisibility(View.INVISIBLE);
+                Log.d("updateTestView", "TEST_ITEM_STATUS_NO_SUPPORT" + status);
                 break;
             }
 
