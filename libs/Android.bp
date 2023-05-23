@@ -21,4 +21,3 @@ cc_prebuilt_library_shared{
     shared_libs : ["libgf_dump_data_decoder"],
     check_elf_files: false
 }
-

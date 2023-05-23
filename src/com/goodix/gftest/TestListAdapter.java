@@ -90,15 +90,12 @@ public class TestListAdapter extends BaseAdapter {
         switch (TEST_ITEM[position]) {
             case TestResultChecker.TEST_SPI:
                 holder.titleView.setText(R.string.test_spi);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
                 break;
             case TestResultChecker.TEST_RESET_PIN:
                 holder.titleView.setText(R.string.test_reset_pin);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
                 break;
             case TestResultChecker.TEST_INTERRUPT_PIN:
                 holder.titleView.setText(R.string.test_interrupt_pin);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
                 break;
             case TestResultChecker.TEST_PIXEL:
                 if (mConfig != null && (mConfig.mChipSeries == Constants.GF_MILAN_F_SERIES
@@ -110,23 +107,18 @@ public class TestListAdapter extends BaseAdapter {
                 } else {
                     holder.titleView.setText(R.string.test_sensor);
                 }
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
                 break;
             case TestResultChecker.TEST_BAD_POINT:
                 holder.titleView.setText(R.string.test_bad_point);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
                 break;
             case TestResultChecker.TEST_CAPTURE:
                 holder.titleView.setText(R.string.test_capture);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
                 break;
             case TestResultChecker.TEST_ALGO:
                 holder.titleView.setText(R.string.test_algo);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
                 break;
             case TestResultChecker.TEST_FW_VERSION:
                 holder.titleView.setText(R.string.test_fw_version);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
                 break;
             case TestResultChecker.TEST_PIXEL_SHORT_STREAK:
                 if (mConfig != null
@@ -139,13 +131,14 @@ public class TestListAdapter extends BaseAdapter {
                 } else {
                     holder.titleView.setText(R.string.test_sensor);
                 }
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
                 break;
             case TestResultChecker.TEST_PERFORMANCE:
                 holder.titleView.setText(R.string.test_performance);
-                updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
+                break;
+            default:
                 break;
         }
+        updateTestView(holder, mTestStatus.get(TEST_ITEM[position]));
 
         return convertView;
     }

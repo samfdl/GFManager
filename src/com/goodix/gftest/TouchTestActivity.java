@@ -174,6 +174,8 @@ public class TouchTestActivity extends Activity {
                             onTestSensorShortStreak(result);
                         }
                         break;
+                    default:
+                        break;
                 }
             });
         }
@@ -329,6 +331,8 @@ public class TouchTestActivity extends Activity {
                 disableBioAssay();
                 mTestStatus.put(testCmd, TEST_ITEM_STATUS_WAIT_FINGER_INPUT);
                 mGoodixFingerprintManager.testCmd(Constants.CMD_TEST_PERFORMANCE);
+                break;
+            default:
                 break;
         }
         mAdapter.notifyDataSetChanged();
@@ -811,6 +815,8 @@ public class TouchTestActivity extends Activity {
                         break;
                     case TestResultChecker.TEST_PERFORMANCE:
                         Log.d(TAG, "TEST_PERFORMANCE " + (reason == TEST_ITEM_STATUS_TIMEOUT ? "timeout" : "canceled"));
+                        break;
+                    default:
                         break;
                 }
 
