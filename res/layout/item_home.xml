@@ -55,19 +55,6 @@
                     android:background="@drawable/fp_illustration_enrollment"
                     android:backgroundTint="#7f009688"
                     android:src="@drawable/enrollment_fingerprint_isolated_animation" />
-
-                <com.goodix.gftest.widget.HoloCircularProgressBar
-                    android:id="@+id/fingerprint_progress_bar"
-                    app:marker_progress="0"
-                    app:marker_visible="false"
-                    app:progress="0.4"
-                    app:progress_background_color="@color/fingerprint_progress_ring_bg"
-                    app:progress_color="#ff009688"
-                    app:stroke_width="4dp"
-                    app:thumb_visible="false"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_centerInParent="true" />
             </RelativeLayout>
         </FrameLayout>
     </FrameLayout>

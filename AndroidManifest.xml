@@ -9,7 +9,6 @@
         android:targetSdkVersion="33" />
 
     <application
-        android:name=".fingerprint.GoodixFingerprintApplication"
         android:allowBackup="false"
         android:debuggable="false"
         android:icon="@drawable/ic_launcher"
@@ -20,7 +19,7 @@
             android:name="com.goodix.gftest.TouchTestActivity"
             android:exported="true"
             android:icon="@drawable/ic_home"
-            android:label="FingerprintTest"
+            android:label="FingerprintTest009"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

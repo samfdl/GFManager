@@ -2,22 +2,3 @@ android_library_import {
     name: "gf_manager_lib",
     aars: ["gf_manager_lib.aar"]
 }
-
-cc_prebuilt_library_shared{
-    name : "libgf_dump_data_decoder",
-    target : {
-        android_arm64 : {srcs : ["arm64-v8a/libgf_dump_data_decoder.so"]},
-        android_arm : {srcs : ["armeabi-v7a/libgf_dump_data_decoder.so"]},         
-    }, 
-    shared_libs: ["liblog"]
-}
-
-cc_prebuilt_library_shared{
-    name : "libdumpJni",
-    target : {
-        android_arm64 : {srcs : ["arm64-v8a/libdumpJni.so"]},
-        android_arm : {srcs : ["armeabi-v7a/libdumpJni.so"]},         
-    },     
-    shared_libs : ["libgf_dump_data_decoder"],
-    check_elf_files: false
-}

@@ -80,8 +80,6 @@ public class TestListAdapter extends BaseAdapter {
             holder.resultView = convertView.findViewById(R.id.test_result);
             holder.testingViewNormal = convertView.findViewById(R.id.testing_normal);
             holder.testingViewNormal.setVisibility(View.GONE);
-            holder.progressBar = convertView.findViewById(R.id.fingerprint_progress_bar);
-            holder.progressBar.setMax(PROGRESS_BAR_MAX);
 
             convertView.setTag(holder);
         } else {
@@ -209,7 +207,6 @@ public class TestListAdapter extends BaseAdapter {
                 holder.testingViewNormal.setVisibility(View.VISIBLE);
                 holder.iconAnimationDrawable.start();
                 // set default enrolling min templates
-                holder.progressBar.setProgress(PROGRESS_BAR_MAX * 0);
                 Log.d("updateTestView", "TEST_ITEM_STATUS_ENROLLING" + status);
                 break;
             case TEST_ITEM_STATUS_AUTHENGICATING: {
@@ -257,7 +254,6 @@ public class TestListAdapter extends BaseAdapter {
         TextView titleView;
         TextView resultView;
         ProgressBar testingViewNormal;
-        HoloCircularProgressBar progressBar;
         AnimatedVectorDrawable iconAnimationDrawable;
         TextView retryView;
     }
