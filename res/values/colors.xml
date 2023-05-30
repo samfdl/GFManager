@@ -4,8 +4,6 @@
     <color name="fg_color">#000000</color>
     <color name="test_succeed_color">#0000fe</color>
     <color name="test_failed_color">#fe0000</color>
-    <color name="fingerprint_progress_ring">#fe0000</color>
-    <color name="fingerprint_progress_ring_bg">#20000000</color>
     <color name="secondary_text_default_dark">#ff000000</color>
     <color name="secondary_text_disabled">#ff9e9e9e</color>
 </resources>

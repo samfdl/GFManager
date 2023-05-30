@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   Copyright (C) 2013-2016, Shenzhen Huiding Technology Co., Ltd.
   All Rights Reserved.
 -->
@@ -42,7 +41,7 @@
     <string name="test_spi_performance_title">SPI performance test:</string>
     <string name="test_spi_performance_get_mode">Reading chip mode costs(1Byte):</string>
     <string name="test_spi_performance_get_fw">Reading fw version costs(10Bytes):</string>
-    <string name="test_spi_performance_get_rawdata">Getting rawdata costs(<xliff:g id="size" example="5">%dBytes</xliff:g>):</string>
+    <string name="test_spi_performance_get_rawdata">Getting rawdata costs(<xliff:g example="5" id="size">%dBytes</xliff:g>):</string>
 
     <!-- spi test -->
     <string name="test_spi_title">SPI test:</string>
@@ -95,11 +94,11 @@
     <string name="test_bio_recived_up_message">Detector is up,test is starting</string>
 
     <!-- for all -->
-<!--    <string name="test_success_tips">Success condition: <xliff:g id="flag">%s</xliff:g><xliff:g id="value">%d</xliff:g></string>-->
-<!--    <string name="test_success_tips_float">Success condition: <xliff:g id="flag">%s</xliff:g><xliff:g id="value">%s</xliff:g></string>-->
-<!--    <string name="test_success_tips_multi_case">Success condition: <xliff:g id="flag">%s</xliff:g><xliff:g id="case1">%s</xliff:g> or <xliff:g id="case2">%s</xliff:g></string>-->
-<!--    <string name="test_success_tips_multi_case_and">Success condition: <xliff:g id="case1">%s</xliff:g><xliff:g id="flag">%s</xliff:g> <xliff:g id="case2">%s</xliff:g></string>-->
-<!--    <string name="test_success_tips_string">Success condition：<xliff:g id="flag">%s</xliff:g><xliff:g id="value">%s</xliff:g></string>-->
+    <!--    <string name="test_success_tips">Success condition: <xliff:g id="flag">%s</xliff:g><xliff:g id="value">%d</xliff:g></string>-->
+    <!--    <string name="test_success_tips_float">Success condition: <xliff:g id="flag">%s</xliff:g><xliff:g id="value">%s</xliff:g></string>-->
+    <!--    <string name="test_success_tips_multi_case">Success condition: <xliff:g id="flag">%s</xliff:g><xliff:g id="case1">%s</xliff:g> or <xliff:g id="case2">%s</xliff:g></string>-->
+    <!--    <string name="test_success_tips_multi_case_and">Success condition: <xliff:g id="case1">%s</xliff:g><xliff:g id="flag">%s</xliff:g> <xliff:g id="case2">%s</xliff:g></string>-->
+    <!--    <string name="test_success_tips_string">Success condition：<xliff:g id="flag">%s</xliff:g><xliff:g id="value">%s</xliff:g></string>-->
     <string name="test_succeed">Success</string>
     <string name="test_failed">Fail</string>
     <string name="test_unfinished">Unfinish</string>
