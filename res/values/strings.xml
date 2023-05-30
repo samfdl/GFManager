@@ -15,21 +15,6 @@
     <string name="test_fw_version">FW version test</string>
     <string name="test_algo">Scene test</string>
 
-    <!-- performance test -->
-    <string name="image_quality">Image Quality:</string>
-    <string name="valid_area">Valid area:</string>
-    <string name="key_point_num">Key point num:</string>
-    <string name="overlay">Overlay:</string>
-    <string name="get_raw_data_time">Get rawdata time:</string>
-    <string name="preprocess_time">Preprocess time:</string>
-    <string name="get_feature_time">Get feature time:</string>
-    <string name="enroll_time">Enroll time:</string>
-    <string name="authenticate_time">Authenticate time:</string>
-    <string name="total_time">Total time:</string>
-
-    <!-- pixel test -->
-    <string name="average_pixel_diff">Average pixel difference:</string>
-
     <string name="test_succeed">Success</string>
     <string name="test_failed">Fail</string>
     <string name="testing">Testing</string>
@@ -41,37 +26,6 @@
     <string name="normal_touch_sensor">Touch the sensor with a twill tip</string>
     <string name="snr_touch_sensor">Touch sensor with twill release after more than 2 seconds</string>
     <string name="real_finger_touch_sensor">Touch the sensor with your finger</string>
-
-    <!-- calibration para retest -->
-    <string name="avg_baserawdata">Avg_Base_Rawdata Value:</string>
-    <string name="avg_baserawdata_success_tips">Success Range:forward[1500,3200]:reverse[700,3000]</string>
-    <string name="avg_touchrawdata">Avg_Touch_Rawdata Value:</string>
-    <string name="avg_touchrawdata_success_tips">Success Range:forward(600,2600]:reverse[1500,3500]</string>
-    <string name="min_touchrawdata">Min_Touch_Rawdata Value:</string>
-    <string name="min_touchrawdata_success_tips">Success Range:forward[600,2600):reverse[Not tested]</string>
-    <string name="calibration_test_tips">Please touch the sensor with the rubber tip.</string>
-
-    <!-- about -->
-    <string name="algo_version">Algo version:</string>
-    <string name="preprocess_version">Preprocess version:</string>
-    <string name="fw_version">FW version:</string>
-    <string name="tee_version">TEE version:</string>
-    <string name="ta_version">TA version:</string>
-    <string name="test_app_version">Test app version:</string>
-    <string name="vendor_id">Vendor ID:</string>
-    <string name="production_date">Production date:</string>
-    <string name="vendor_ofilm">Ofilm</string>
-    <string name="vendor_akerr">Akerr</string>
-    <string name="vendor_ct">CT</string>
-    <string name="vendor_holitech">Holiteck</string>
-    <string name="vendor_truly">Truly</string>
-    <string name="vendor_lead">Lead</string>
-    <string name="unknown">Unknow</string>
-    <string name="copyright">Copyright © 2015 Goodix All Rights Reserved.</string>
-
-
-
-
 
     <string name="wait_finger_down_tip">"Waiting key down"</string>
     <string name="wait_finger_up_tip">"Waiting key up"</string>
