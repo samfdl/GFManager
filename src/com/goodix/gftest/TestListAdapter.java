@@ -1,7 +1,6 @@
 package com.goodix.gftest;
 
 import android.content.Context;
-import android.graphics.drawable.AnimatedVectorDrawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,13 +13,10 @@ import com.goodix.fingerprint.Constants;
 import com.goodix.fingerprint.GFConfig;
 import com.goodix.gftest.R;
 import com.goodix.gftest.utils.checker.TestResultChecker;
-import com.goodix.gftest.widget.HoloCircularProgressBar;
 
 import java.util.HashMap;
 
 public class TestListAdapter extends BaseAdapter {
-    private static final int PROGRESS_BAR_MAX = 10000;
-
     private static final int TEST_ITEM_STATUS_IDLE = 0;
     private static final int TEST_ITEM_STATUS_TESTING = 1;
     private static final int TEST_ITEM_STATUS_SUCCEED = 2;
@@ -205,7 +201,6 @@ public class TestListAdapter extends BaseAdapter {
             case TEST_ITEM_STATUS_ENROLLING:
                 holder.resultView.setVisibility(View.INVISIBLE);
                 holder.testingViewNormal.setVisibility(View.VISIBLE);
-                holder.iconAnimationDrawable.start();
                 // set default enrolling min templates
                 Log.d("updateTestView", "TEST_ITEM_STATUS_ENROLLING" + status);
                 break;
@@ -216,8 +211,6 @@ public class TestListAdapter extends BaseAdapter {
                 sb.append(MAX_FAILED_ATTEMPTS);
                 holder.resultView.setVisibility(View.INVISIBLE);
                 holder.testingViewNormal.setVisibility(View.VISIBLE);
-                holder.iconAnimationDrawable.start();
-                holder.retryView.setText(sb.toString());
                 Log.d("updateTestView", "TEST_ITEM_STATUS_AUTHENGICATING" + status);
                 break;
             }
@@ -254,7 +247,5 @@ public class TestListAdapter extends BaseAdapter {
         TextView titleView;
         TextView resultView;
         ProgressBar testingViewNormal;
-        AnimatedVectorDrawable iconAnimationDrawable;
-        TextView retryView;
     }
 }
