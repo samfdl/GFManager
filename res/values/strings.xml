@@ -1,58 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-  Copyright (C) 2013-2016, Shenzhen Huiding Technology Co., Ltd.
-  All Rights Reserved.
--->
-
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name_goodix">Goodix finger test</string>
     <string name="app_name">Fingerpirnt test</string>
-    <string name="app_name_far_frr">"FRR/FAR test"</string>
     <string name="test_auto">Auto test</string>
     <string name="test_sensor">Pixel open short test</string>
-    <string name="test_sensor_fine">Sensor validity test</string>
     <string name="test_pixel_open">Pixel open test</string>
     <string name="test_pixel_short_streak">Pixel short streak test</string>
     <string name="test_bad_point">Bad point test</string>
-    <string name="test_pause_resume_enroll">Pause and resume enroll test</string>
-    <string name="test_calibration_para_retest">CalibrationParam test</string>
     <string name="test_capture">Image quality test</string>
     <string name="test_performance">Performance test</string>
-    <string name="test_spi_performance">SPI performance test</string>
     <string name="test_spi">SPI test</string>
     <string name="test_reset_pin">Reset pin test</string>
     <string name="test_interrupt_pin">Interrupt pin test</string>
-    <string name="test_frr_far_management">Fingerprint management</string>
-    <string name="test_frr_far_record">FRR/FAR record</string>
-    <string name="test_frr_far_record_setting">Setting</string>
-    <string name="test_frr_far_play">FRR/FAR test</string>
-    <string name="test_frr_play">FRR test</string>
-    <string name="test_far_play">FAR test</string>
-    <string name="test_report_make">Test report</string>
-    <string name="test_frr_far_setting">Setting</string>
-    <string name="test_about">About</string>
     <string name="test_fw_version">FW version test</string>
     <string name="test_algo">Scene test</string>
-    <string name="test_bio_assay">Bio assay test</string>
-    <string name="test_hbd_feature">HBD test</string>
-    <string name="test_rawdata_saturated">Rawdata saturation test</string>
-    <string name="test_detail">Test detail</string>
-    <string name="sensor_checking">Detecting sensor...</string>
-    <!-- spi performance test -->
-    <string name="test_spi_performance_title">SPI performance test:</string>
-    <string name="test_spi_performance_get_mode">Reading chip mode costs(1Byte):</string>
-    <string name="test_spi_performance_get_fw">Reading fw version costs(10Bytes):</string>
-    <string name="test_spi_performance_get_rawdata">Getting rawdata costs(<xliff:g example="5" id="size">%dBytes</xliff:g>):</string>
-
-    <!-- spi test -->
-    <string name="test_spi_title">SPI test:</string>
-    <string name="test_spi_fw">FW version:</string>
-    <string name="test_spi_chip_id">Chip ID:</string>
-
-    <!-- reset pin test -->
-    <string name="test_reset_pin_title">Reset pin test:</string>
-
-    <!-- interrupt pin test -->
-    <string name="test_interrupt_pin_title">Interrupt pin test:</string>
 
     <!-- performance test -->
     <string name="image_quality">Image Quality:</string>
