@@ -19,94 +19,28 @@
     <string name="image_quality">Image Quality:</string>
     <string name="valid_area">Valid area:</string>
     <string name="key_point_num">Key point num:</string>
-    <string name="increase_rate">Increase rate:</string>
     <string name="overlay">Overlay:</string>
     <string name="get_raw_data_time">Get rawdata time:</string>
     <string name="preprocess_time">Preprocess time:</string>
     <string name="get_feature_time">Get feature time:</string>
     <string name="enroll_time">Enroll time:</string>
     <string name="authenticate_time">Authenticate time:</string>
-    <string name="touch_sensor">Press on sensor</string>
     <string name="total_time">Total time:</string>
-    <string name="get_gsc_time">Get gsc time</string>
-    <string name="bio_assay_time">bio assay time</string>
-    <string name="less_than_ms_time">less than </string>
-
-    <!-- capture test -->
-    <string name="test_capture_title">Image quality test:</string>
 
     <!-- pixel test -->
-    <string name="test_sensor_title">Pixel opern short test:</string>
-    <string name="test_sensor_result">Test result:</string>
-    <string name="test_bad_point_title">Bad point test:</string>
-    <string name="test_sensor_bad_pixel_num">Bad pixel num:</string>
-    <string name="test_sensor_bad_pixel_short_streak_num">Bad pixel short streak num:</string>
-    <string name="test_sensor_fine_title">Sensor validity test:</string>
-    <string name="test_sensor_fine_result">Test result:</string>
     <string name="average_pixel_diff">Average pixel difference:</string>
 
-    <!-- bio assay test -->
-    <string name="test_bio_assay_no_finger_touch">Optical signal difference（untouch）:</string>
-    <string name="test_bio_assay_finger_touch">Optical signal difference（touch）:</string>
-    <string name="test_hbd_calibraion_avg">HBD calibration average(R)</string>
-    <string name="test_hbd_calibraion_electricity">Current value</string>
-    <string name="test_bio_waiting_start">Please keep detector up，test starts in <xliff:g id="value">%d</xliff:g> seconds</string>
-    <string name="test_bio_no_finger_tips">Please make sure nothing block the sensor while testing</string>
-    <string name="test_bio_recived_up_message">Detector is up,test is starting</string>
-
-    <!-- for all -->
-    <!--    <string name="test_success_tips">Success condition: <xliff:g id="flag">%s</xliff:g><xliff:g id="value">%d</xliff:g></string>-->
-    <!--    <string name="test_success_tips_float">Success condition: <xliff:g id="flag">%s</xliff:g><xliff:g id="value">%s</xliff:g></string>-->
-    <!--    <string name="test_success_tips_multi_case">Success condition: <xliff:g id="flag">%s</xliff:g><xliff:g id="case1">%s</xliff:g> or <xliff:g id="case2">%s</xliff:g></string>-->
-    <!--    <string name="test_success_tips_multi_case_and">Success condition: <xliff:g id="case1">%s</xliff:g><xliff:g id="flag">%s</xliff:g> <xliff:g id="case2">%s</xliff:g></string>-->
-    <!--    <string name="test_success_tips_string">Success condition：<xliff:g id="flag">%s</xliff:g><xliff:g id="value">%s</xliff:g></string>-->
     <string name="test_succeed">Success</string>
     <string name="test_failed">Fail</string>
-    <string name="test_unfinished">Unfinish</string>
-    <string name="test_finished">Finish</string>
-    <string name="test_again">Test again</string>
     <string name="testing">Testing</string>
     <string name="busy">Busy</string>
     <string name="canceled">Cancel</string>
     <string name="timeout">Timeout</string>
-    <string name="timeout_before_press">Timeout，Make sure sensor being touched within<xliff:g id="value">%d</xliff:g>s，Please try again。</string>
     <string name="ok">OK</string>
-    <string name="disable">Disable</string>
-    <string name="sytem_info">System Info</string>
-    <string name="back_info">Leave the page？</string>
-    <string name="no_hardware">Sensor is not available！</string>
-    <string name="sensor_validity_test_fail">Sensor test failed!</string>
     <string name="bad_point_touch_sensor">Touch the sensor wiht a rubber tip</string>
     <string name="normal_touch_sensor">Touch the sensor with a twill tip</string>
     <string name="snr_touch_sensor">Touch sensor with twill release after more than 2 seconds</string>
     <string name="real_finger_touch_sensor">Touch the sensor with your finger</string>
-    <string name="finger_left_sensor">Please move away the detector</string>
-    <string name="error_code">Error code:</string>
-    <string name="less_than">Less than</string>
-    <string name="more_than">More than</string>
-
-    <!-- bad point -->
-    <string name="touch_rubber">Please touch the sensor with the rubber tip．\n Test result may be unrelialbe if the sensor is touched by finger</string>
-    <string name="bad_pixel_num">Bad pixel num:</string>
-    <string name="local_bad_pixel_num">Local bad pixel num:</string>
-    <string name="avg_diff_val">average difference value:</string>
-    <string name="all_tilt_angle">All tilt angle:</string>
-    <string name="block_tilt_angle_max">Local tilt angle:</string>
-    <string name="noise">noise:</string>
-    <string name="total_bad_pixel">Total bad pixel num:</string>
-    <string name="local_bad_pixel">Local bad pixel num:</string>
-    <string name="local_worst">Local worst pixel num:</string>
-    <string name="singular">Largest singular gradience sum:</string>
-    <string name="incircle">Largest bad point num within circle:</string>
-    <string name="local_small_bad_pixel">Local small bad pixel num:</string>
-    <string name="local_big_bad_pixel">Local big bad pixel num:</string>
-
-    <!-- for rawdata saturated test -->
-    <string name="under_saturated_pixel_num">Under saturation pixel num:</string>
-    <string name="over_saturated_pixel_num">Over saturation pixel num:</string>
-
-    <!-- for empty test detail -->
-    <string name="no_test_detail_info">No results</string>
 
     <!-- calibration para retest -->
     <string name="avg_baserawdata">Avg_Base_Rawdata Value:</string>
@@ -475,142 +409,8 @@
     <string name="waiting">Please wait..</string>
     <string name="data_address">The file address of saved data ： </string>
     <string name="failed_prompt">Failure Prompt</string>
-    <string name="dump_memory_data_timeout">Dump memory data timeout</string>
-    <string name="confirm">Confirm</string>
-    <string name="item_memory_off">Off</string>
-    <string name="item_memory_on">On</string>
-    <string name="reboot_prompt">Restart Prompt</string>
-    <string name="reboot_prompt_detail">The memory test will run normally after restart!</string>
-    <string name="need_restart">This setting will take effect after next reboot</string>
-    <string name="size_max">Max</string>
-    <string name="size_min">Min</string>
-    <string name="nodes_used">Used</string>
-    <string name="nodes_freed">Freed</string>
 
-    <!-- for frr database -->
-    <string name="test_frr_database">FRR test statics</string>
-    <string name="test_frr_database_detail">FRR fail info</string>
-    <string name="software_version">Software version：</string>
-    <string name="protocol_version">Protocol version：</string>
-    <string name="screen_on_fail_retry">Screen on fail retry：</string>
-    <string name="screen_off_fail_retry">Screen off fail retry：</string>
-    <string name="success">Success count：</string>
-    <string name="failed">Fail count：</string>
-    <string name="frr_value">Frr value：</string>
-    <string name="frr_filter_value">Frr filter value：</string>
-    <string name="detail">Details：</string>
-    <string name="none">N/A</string>
-    <string name="more_detail">More details</string>
-    <string name="bio_flag">Bio flag</string>
-    <string name="image_q">Image quality</string>
-    <string name="image_a">Image area</string>
-    <string name="frr_database_dialog_title">Tip</string>
-    <string name="frr_database_dialog_info">Not support this function</string>
-    <string name="frr_filter">Frr threshold setting(only valid image is counted)</string>
-    <string name="frr_img_quality_filter">Image quality less than：</string>
-    <string name="frr_img_area_filter">Image area less than：</string>
-    <string name="frr_chip_not_support">Not suppport</string>
-    <string name="frr_disable">Frr Disable</string>
-    <string name="frr_not_living">Not living</string>
-    <string name="frr_not_matched">Not match</string>
-
-    <!-- untrusted fingerprint -->
-    <string name="untrusted_enroll">Enorll test</string>
-    <string name="untrusted_authenticate">Authenticate test</string>
-    <string name="untrusted_fingerprint">Authenticate and enroll test</string>
-    <string name="add_fingerprint">Add fingerprint</string>
-    <string name="fingerprint_enrolling">Enrolling</string>
-    <string name="authentication_failed">Authenticate fail</string>
-    <string name="fingerprint_name">Fingerprint1</string>
-    <string name="not_enrolled">Add fingerprint first</string>
-    <string name="untrusted_enrolling_min_templates">Minimal templates</string>
-    <string name="security_settings_fingerprint_enroll_start_message">"Move your finger after vibration"</string>
-    <string name="security_settings_fingerprint_enroll_repeat_title">"Please repeat"</string>
-    <string name="security_settings_fingerprint_enroll_repeat_message">"Move your finger slightly"</string>
-
-    <!-- for template_study_update_save_threshold -->
-    <string name="title_template_update_save_threshold">Template update save threshold</string>
-
-    <!-- memory management -->
-    <string name="unmalloc">Unmalloc</string>
-    <string name="unused">Unused</string>
-    <string name="used">Used</string>
-    <string name="memory_total">Total</string>
-    <string name="memory_unused">Freed</string>
-    <string name="memory_used">Used</string>
-    <string name="memory_status">State Diagram</string>
-    <string name="memory_management">Memory management</string>
-    <string name="memory_usage">Memory Usage</string>
-    <string name="memory_node_distribution">Nodes</string>
-    <string name="memory_used_node_count">Used</string>
-    <string name="memory_freed_node_count">Freed</string>
-    <string name="memory_total_count">Total</string>
-    <string name="memory_distribution">Distribution</string>
-    <string name="name_count">nodes</string>
-    <string name="test_lockout">lockout and lockout_reset</string>
-    <string name="test_lockout_desc">The operation of \'lockout\' is to disable the authentication function temporarily; and \'reset lockout\' means to resume from previous pausing. To test \'lockout\', click the lockout button to lockout the chip; and then press the power key to lock the phone and try to unlock the phone using fingerprints; you should find it doesn\'t work. To test \'reset lockout\', you can enter the phone using password and click the \'Reset Lockout\' button; and then press the power key to lock the screen and try to unlock the phone using fingerprints; you should find it works again.</string>
-
-    <string name="fpc_menu_key_title">Menu key</string>
-    <string name="fpc_back_key_title">Back key</string>
-    <string name="fpc_ring_key_title">Ring key \n<font size="11">(Don\'t touch ringkey before testing)</font></string>
     <string name="wait_finger_down_tip">"Waiting key down"</string>
     <string name="wait_finger_up_tip">"Waiting key up"</string>
-
-    <!-- fpc key test -->
-    <string name="test_menu_key">Menu key test</string>
-    <string name="test_menu_key_en">Menu key enable:</string>
-    <string name="test_menu_key_cancel_data">Menu key cancel data:</string>
-    <string name="test_menu_key_raw_data">Menu key raw data:</string>
-    <string name="test_menu_key_status">Menu key status:</string>
-    <string name="test_menu_key_event">Menu key event:</string>
-
-    <string name="test_back_key">Back key test</string>
-    <string name="test_back_key_en">Back key enable:</string>
-    <string name="test_back_key_cancel_data">Back key cancel data:</string>
-    <string name="test_back_key_raw_data">Back key raw data:</string>
-    <string name="test_back_key_status">Back key status:</string>
-    <string name="test_back_key_event">Back key event:</string>
-
-    <string name="test_ring_key">Ring key test</string>
-    <string name="test_ring_key_en">Ring key enable:</string>
-    <string name="test_ring_key_cancel_data">Ring key cancel data:</string>
-    <string name="test_ring_key_raw_data">Ring key raw data:</string>
-    <string name="test_ring_key_status">Ring key status:</string>
-    <string name="test_ring_key_event">Ring key event:</string>
-
     <string name="test_no_support">No Support</string>
-
-    <!-- add for snr test-->
-    <string name="snr_test">Twill SNR test</string>
-    <string name="snr_result_snr_value">SNR value:</string>
-    <string name="snr_result_signal">SNR singal:</string>
-    <string name="snr_result_noise">SNR noise:</string>
-    <string name="touch_rubber_snr">Please touch the sensor with the rubber tip and put up at lease 2 seconds later\uff0e\n Test result may be unrelialbe if the sensor is touched by finger</string>
-
-    <!-- add for stable factor test-->
-    <string name="test_stable_factor">Twill stable test</string>
-    <string name="stable_factor_result">Twill stable test:</string>
-    <string name="stable_factor_value">Twill stable value:</string>
-    <string name="stable_factor_first">please pass Twill test first</string>
-    <string name="test_twill_badpoint">Twill badpoint test</string>
-    <string name="twill_badpoint_max">Total badpoint:</string>
-    <string name="twill_badpoint_local">Local badpoint:</string>
-    <string name="twill_badpoint_numlocal">Local badblock:</string>
-    <string name="twill_badpoint_line">badoint Line Num:</string>
-
-    <!-- authenticate ratio test-->
-    <string name="auth_ratio">authenticate ratio</string>
-    <string name="authenticate_timestamp">timestamp</string>
-    <string name="authenticate_result">result</string>
-    <string name="match_score">match score</string>
-    <string name="template_id">template id</string>
-    <string name="template_size">template size</string>
-
-    <string name="swipe_enroll_category">Swipe Enroll</string>
-    <string name="summary_swipe_enroll_switch">Enable or disable swipe enroll</string>
-    <string name="title_swipe_enroll_switch">Enable swipe enroll</string>
-
-    <string name="total_bad_gradient">Total bad point gradient</string>
-    <string name="local_bad_gradient">Local bad point gradient</string>
-    <string name="local_worst_gradient">Local worst bad point gradient</string>
 </resources>
